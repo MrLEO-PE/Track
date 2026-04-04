@@ -722,13 +722,70 @@
       display: none;
     }
 
-    /* =============================================
+    .profile-pic-options {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .profile-pic-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 40px;
+      padding: 8px 12px;
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all 200ms ease;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .profile-pic-btn:hover {
+      border-color: var(--accent);
+      background: var(--surface);
+    }
+
+    .profile-pic-btn input[type="file"] {
+      display: none;
+    }
+
+    /* =====================================================
        STUDENT APP
        ============================================= */
     #studentApp {
       display: none;
       min-height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      -webkit-overflow-scrolling: touch;
       animation: viewFadeIn 300ms ease;
+    }
+
+    #studentApp::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #studentApp::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #studentApp::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    #studentApp::-webkit-scrollbar-thumb:hover {
+      background: var(--text-2);
     }
 
     @keyframes viewFadeIn {
@@ -1101,7 +1158,29 @@
     #teacherApp {
       display: none;
       min-height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      -webkit-overflow-scrolling: touch;
       animation: viewFadeIn 300ms ease;
+    }
+
+    #teacherApp::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #teacherApp::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #teacherApp::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    #teacherApp::-webkit-scrollbar-thumb:hover {
+      background: var(--text-2);
     }
 
     /* =============================================
@@ -2204,10 +2283,16 @@
 
           <div class="form-group">
             <label>Profile Picture (optional)</label>
-            <label class="file-upload-btn">
-              <span id="srFileLabel">📷 Choose a photo</span>
-              <input type="file" id="srProfilePic" accept="image/*">
-            </label>
+            <div class="profile-pic-options">
+              <label class="profile-pic-btn">
+                <span>📷 Choose</span>
+                <input type="file" id="srProfilePic" accept="image/*">
+              </label>
+              <label class="profile-pic-btn">
+                <span>📸 Take</span>
+                <input type="file" id="srProfilePicCamera" accept="image/*" capture="user">
+              </label>
+            </div>
           </div>
 
           <button type="submit" class="btn btn-primary btn-block">Create Account</button>
@@ -2934,17 +3019,7 @@
       ksContainer.innerHTML = `<span class="key-stage-badge">Key Stage: ${ks}</span>`;
     });
 
-    /* =============================================
-       PROFILE PICTURE FILE INPUT LABEL
-       ============================================= */
-    document.getElementById('srProfilePic').addEventListener('change', function() {
-      const label = document.getElementById('srFileLabel');
-      if (this.files.length > 0) {
-        label.textContent = '📷 ' + this.files[0].name;
-      } else {
-        label.textContent = '📷 Choose a photo';
-      }
-    });
+    /* Profile picture inputs now use two separate inputs (file picker and camera) */
 
     /* =============================================
        FORM VALIDATION HELPERS
@@ -2993,7 +3068,7 @@
       const school = document.getElementById('srSchool').value;
       const house = document.getElementById('srHouse').value;
       const classGrade = document.getElementById('srClass').value;
-      const profilePicFile = document.getElementById('srProfilePic').files[0] || null;
+      const profilePicFile = document.getElementById('srProfilePic').files[0] || document.getElementById('srProfilePicCamera').files[0] || null;
 
       if (!firstName) { showError('srFirstNameErr'); valid = false; }
       if (!familyName) { showError('srFamilyNameErr'); valid = false; }
@@ -3222,11 +3297,22 @@
 
     function showAuthScreen() {
       hideAllScreens();
+      /* Restore overflow constraints for auth screen */
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      document.body.style.height = '100vh';
+      document.body.style.width = '100vw';
       document.getElementById('authScreen').style.display = 'flex';
     }
 
     function showStudentApp(studentId) {
       hideAllScreens();
+      /* Enable scrolling on body/html for the app */
+      document.documentElement.style.overflow = 'auto';
+      document.body.style.overflow = 'auto';
+      document.body.style.height = 'auto';
+      document.body.style.width = 'auto';
+      
       currentStudentId = studentId;
       document.getElementById('studentApp').style.display = 'block';
       renderStudentDashboard(studentId);
@@ -3256,6 +3342,12 @@
 
     function showTeacherApp(teacherId) {
       hideAllScreens();
+      /* Enable scrolling on body/html for the app */
+      document.documentElement.style.overflow = 'auto';
+      document.body.style.overflow = 'auto';
+      document.body.style.height = 'auto';
+      document.body.style.width = 'auto';
+      
       currentTeacherId = teacherId;
       document.getElementById('teacherApp').style.display = 'block';
       renderTeacherNotifications();
@@ -4459,6 +4551,7 @@
     let arenaPlayerScore = 0;
     let arenaOpponentScore = 0;
     let arenaQuestionsUsed = [];
+    let arenaTimerInterval = null;
 
     function getArenaStats(student) {
       if (!student.gloryPoints) student.gloryPoints = 0;
@@ -4560,6 +4653,12 @@
         return;
       }
 
+      /* Clear previous timer if still running */
+      if (arenaTimerInterval) {
+        clearInterval(arenaTimerInterval);
+        arenaTimerInterval = null;
+      }
+
       const topicIndex = Math.floor(Math.random() * 12);
       const questions = QUIZ_QUESTIONS_DATA[topicIndex] || [];
       let q = questions[Math.floor(Math.random() * questions.length)];
@@ -4591,7 +4690,7 @@
       `;
 
       let timeLeft = baseTimer;
-      const timerInterval = setInterval(() => {
+      arenaTimerInterval = setInterval(() => {
         timeLeft--;
         const timerEl = document.getElementById('arenaTimer');
         if (timerEl) {
@@ -4599,13 +4698,20 @@
           if (timeLeft <= 3) timerEl.style.color = '#DC3545';
         }
         if (timeLeft <= 0) {
-          clearInterval(timerInterval);
+          clearInterval(arenaTimerInterval);
+          arenaTimerInterval = null;
           handleArenaAnswer(-1, q.correct);
         }
       }, 1000);
     }
 
     function handleArenaAnswer(selectedIdx, correct) {
+      /* Clear timer immediately to prevent overlap */
+      if (arenaTimerInterval) {
+        clearInterval(arenaTimerInterval);
+        arenaTimerInterval = null;
+      }
+
       if (selectedIdx === correct) {
         arenaPlayerScore++;
       }
