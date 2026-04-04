@@ -1304,6 +1304,112 @@
       background: var(--surface-2);
       border: 3px solid var(--accent);
     }
+
+    /* Avatar System - Level-based styling */
+    .avatar-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      background: var(--surface-2);
+      border: 3px solid var(--accent);
+      margin-bottom: 8px;
+      transition: transform 300ms ease, filter 300ms ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Strength stat: size scaling */
+    .avatar.strength-high {
+      transform: scale(1.15);
+      filter: brightness(1.1) saturate(1.2);
+    }
+
+    .avatar.strength-medium {
+      transform: scale(1.08);
+    }
+
+    /* Agility stat: glow effect */
+    .avatar.agility-high {
+      filter: drop-shadow(0 0 8px rgba(255, 165, 0, 0.6));
+      animation: agility-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes agility-pulse {
+      0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 165, 0, 0.6)); }
+      50% { filter: drop-shadow(0 0 12px rgba(255, 165, 0, 0.8)); }
+    }
+
+    /* Flexibility stat: smooth animation */
+    .avatar.flexibility-high {
+      animation: flexibility-rotate 4s ease-in-out infinite;
+    }
+
+    @keyframes flexibility-rotate {
+      0%, 100% { transform: rotateZ(0deg); }
+      50% { transform: rotateZ(3deg); }
+    }
+
+    /* Avatar stats display */
+    .avatar-stats {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 0.75rem;
+    }
+
+    .avatar-stat-bar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .avatar-stat-label {
+      min-width: 70px;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+
+    .avatar-stat-bar-bg {
+      flex: 1;
+      height: 6px;
+      background: var(--surface-2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .avatar-stat-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      border-radius: 3px;
+      transition: width 300ms ease;
+    }
+
+    .avatar-stat-value {
+      min-width: 30px;
+      text-align: right;
+      color: var(--text);
+      font-weight: 600;
+    }
+
     .arena-opponent-name {
       font-weight: 600;
       font-size: 0.95rem;
@@ -2422,6 +2528,10 @@
         <span class="nav-icon">🏆</span>
         <span>House</span>
       </button>
+      <button class="nav-item" data-section="settings">
+        <span class="nav-icon">⚙️</span>
+        <span>Settings</span>
+      </button>
     </nav>
 
     <!-- App Body -->
@@ -2559,6 +2669,12 @@
         <div id="housePointsContent"></div>
       </div>
 
+      <!-- ===== SETTINGS SECTION ===== -->
+      <div class="student-section" id="sectionSettings">
+        <div class="section-header"><h2>⚙️ Settings</h2></div>
+        <div id="settingsContent"></div>
+      </div>
+
     </div>
   </div>
 
@@ -2582,12 +2698,14 @@
       <button class="nav-item active" data-section="classOverview">📋 Class Overview</button>
       <button class="nav-item" data-section="skillDefs">✏️ Skill Definitions</button>
       <button class="nav-item" data-section="sportControls">⚙️ Sport Controls</button>
+      <button class="nav-item" data-section="approvals">✅ Approvals</button>
       <button class="nav-item" data-section="wellDone">🏅 Well Done!</button>
     </nav>
     <div class="app-body teacher-body">
       <div class="teacher-section active" id="tSectionClassOverview"></div>
       <div class="teacher-section" id="tSectionSkillDefs"></div>
       <div class="teacher-section" id="tSectionSportControls"></div>
+      <div class="teacher-section" id="tSectionApprovals"></div>
       <div class="teacher-section" id="tSectionWellDone"></div>
     </div>
   </div>
@@ -2831,7 +2949,13 @@
     /* =============================================
        LEVEL THRESHOLDS
        ============================================= */
-    const LEVEL_THRESHOLDS = [0, 10, 20, 30, 40, 50, 65, 80, 95, 110, 130, 155, 180, 210, 240, 280, 320, 370, 420, 500];
+    const LEVEL_THRESHOLDS = [
+      0,    10,   20,   30,   40,   50,   65,   80,   95,   110,  // Levels 1-10
+      130,  155,  180,  210,  240,  280,  320,  370,  420,  500,  // Levels 11-20
+      580,  670,  770,  880,  1000, 1130, 1270, 1420, 1580, 1750, // Levels 21-30
+      1930, 2120, 2320, 2530, 2750, 2980, 3220, 3470, 3730, 4000, // Levels 31-40
+      4280, 4570, 4870, 5180, 5500, 5830, 6170, 6520, 6880, 7250  // Levels 41-50
+    ];
 
     function getLevel(xp) {
       let level = 1;
@@ -2842,12 +2966,12 @@
           break;
         }
       }
-      return Math.min(level, 20);
+      return Math.min(level, 50);
     }
 
     function getLevelProgress(xp) {
       const level = getLevel(xp);
-      if (level >= 20) return { current: xp, needed: LEVEL_THRESHOLDS[19], nextThreshold: LEVEL_THRESHOLDS[19], percent: 100 };
+      if (level >= 50) return { current: xp, needed: LEVEL_THRESHOLDS[49], nextThreshold: LEVEL_THRESHOLDS[49], percent: 100 };
       const currentThreshold = LEVEL_THRESHOLDS[level - 1];
       const nextThreshold = LEVEL_THRESHOLDS[level];
       const progress = xp - currentThreshold;
@@ -2858,6 +2982,432 @@
         nextThreshold: nextThreshold,
         percent: Math.min(100, Math.round((progress / range) * 100))
       };
+    }
+
+    /* =============================================
+       AVATAR SYSTEM (Levels 1-50 with stats)
+       ============================================= */
+    function calculateAvatarStats(level) {
+      const agility = 15 + (level - 1) * 0.306;
+      const strength = 1.0 + (level - 1) * 0.0102;
+      const flexibility = Math.floor(level / 10);
+      return {
+        level,
+        agility: Math.round(agility * 10) / 10,
+        strength: Math.round(strength * 1000) / 1000,
+        flexibility: Math.min(5, flexibility)
+      };
+    }
+
+    function getAvatarDisplay(student) {
+      const level = getLevel(student.xp || 0);
+      const gender = student.gender || 'Male';
+      const profilePic = student.profilePic;
+      
+      /* Use profile picture if exists, else generate avatar */
+      if (profilePic) {
+        return { type: 'photo', src: profilePic, level, gender };
+      } else {
+        /* Fallback to gender-based emoji */
+        const faces = gender === 'Female' ? ['👩', '👧', '💃'] : ['👨', '👦', '🧑'];
+        const face = faces[Math.floor(Math.random() * faces.length)];
+        return { type: 'emoji', emoji: face, level, gender };
+      }
+    }
+
+    function renderAvatarHTML(student, includeStats = true) {
+      const level = getLevel(student.xp || 0);
+      const avatar = getAvatarDisplay(student);
+      const stats = calculateAvatarStats(level);
+      
+      /* Determine stat-based CSS classes */
+      let strengthClass = '';
+      if (stats.strength > 1.3) strengthClass = 'strength-high';
+      else if (stats.strength > 1.15) strengthClass = 'strength-medium';
+      
+      let agilityClass = '';
+      if (stats.agility > 22) agilityClass = 'agility-high';
+      
+      let flexibilityClass = '';
+      if (stats.flexibility >= 3) flexibilityClass = 'flexibility-high';
+      
+      let html = `<div class="avatar-container">`;
+      html += `<div class="avatar ${strengthClass} ${agilityClass} ${flexibilityClass}">`;
+      
+      if (avatar.type === 'photo') {
+        html += `<img src="${avatar.src}" alt="${student.firstName}">`;
+      } else {
+        html += avatar.emoji;
+      }
+      
+      html += `</div>`;
+      
+      if (includeStats) {
+        html += `<div class="avatar-stats">`;
+        
+        /* Agility stat */
+        const agilityPercent = Math.round((stats.agility / 30) * 100);
+        html += `<div class="avatar-stat-bar">`;
+        html += `<span class="avatar-stat-label">⚡ Agility</span>`;
+        html += `<div class="avatar-stat-bar-bg"><div class="avatar-stat-bar-fill" style="width:${agilityPercent}%"></div></div>`;
+        html += `<span class="avatar-stat-value">${stats.agility}s</span>`;
+        html += `</div>`;
+        
+        /* Strength stat */
+        const strengthPercent = Math.round((stats.strength / 1.5) * 100);
+        html += `<div class="avatar-stat-bar">`;
+        html += `<span class="avatar-stat-label">💪 Strength</span>`;
+        html += `<div class="avatar-stat-bar-bg"><div class="avatar-stat-bar-fill" style="width:${strengthPercent}%"></div></div>`;
+        html += `<span class="avatar-stat-value">${(stats.strength * 100).toFixed(0)}%</span>`;
+        html += `</div>`;
+        
+        /* Flexibility stat */
+        const flexibilityPercent = Math.round((stats.flexibility / 5) * 100);
+        html += `<div class="avatar-stat-bar">`;
+        html += `<span class="avatar-stat-label">🔄 Skip</span>`;
+        html += `<div class="avatar-stat-bar-bg"><div class="avatar-stat-bar-fill" style="width:${flexibilityPercent}%"></div></div>`;
+        html += `<span class="avatar-stat-value">${stats.flexibility}</span>`;
+        html += `</div>`;
+        
+        html += `</div>`;
+      }
+      
+      html += `</div>`;
+      
+      return html;
+    }
+
+    /* =============================================
+       GHOST SYSTEM (Record player performance)
+       ============================================= */
+    function createPlayerGhost(studentId, answersData, timings, score) {
+      const student = sdkLoad('students', studentId);
+      const ghostData = {
+        studentId: studentId,
+        studentName: student ? `${student.firstName} ${student.familyName}` : 'Unknown',
+        profilePic: student?.profilePic || null,
+        gloryPoints: student?.gloryPoints || 0,
+        level: getLevel(student?.xp || 0),
+        gender: student?.gender || 'Male',
+        answers: answersData,
+        timings: timings,
+        finalScore: score,
+        timestamp: new Date().toISOString(),
+        accuracy: Math.round((answersData.filter(a => a).length / answersData.length) * 100)
+      };
+      
+      /* Save as latest ghost for this student (replace previous) */
+      if (student) {
+        student.playerGhost = ghostData;
+        sdkSave('students', studentId, student);
+      }
+      
+      return ghostData;
+    }
+
+    function getPlayerGhost(studentId, gloryPointRange = 5) {
+      const ghost = sdkLoad('students', studentId)?.playerGhost;
+      if (!ghost) return null;
+      
+      /* Check if ghost is within glory point range */
+      if (Math.abs(ghost.gloryPoints - (sdkLoad('students', currentStudentId)?.gloryPoints || 0)) > gloryPointRange) {
+        return null;
+      }
+      return ghost;
+    }
+
+    function generateAIGhost(difficulty) {
+      const accuracy = 70 + Math.random() * 25; /* 70-95% accuracy */
+      const responseDelay = 8 + Math.random() * 7; /* 8-15s delay */
+      return {
+        isAI: true,
+        name: 'AI Ghost',
+        emoji: '🤖',
+        accuracy: accuracy,
+        responseDelay: responseDelay,
+        difficulty: difficulty
+      };
+    }
+
+    function replayGhostAnswer(ghost, questionNumber) {
+      if (ghost.isAI) {
+        /* AI ghost: random decision based on accuracy */
+        const correctProb = ghost.accuracy / 100;
+        return Math.random() < correctProb;
+      } else {
+        /* Player ghost: reproduce actual answer with timing variance */
+        return ghost.answers[questionNumber] || false;
+      }
+    }
+
+    function getGhostResponseTiming(ghost, baseTime) {
+      if (ghost.isAI) {
+        /* AI: simulated delay with variance */
+        return ghost.responseDelay * (0.8 + Math.random() * 0.4);
+      } else {
+        /* Player: actual timing with ±1-2s variance */
+        const originalTime = ghost.timings[0] || baseTime;
+        const variance = (Math.random() - 0.5) * 2;
+        return Math.max(1, originalTime + variance);
+      }
+    }
+
+    /* =============================================
+       ACTIVE SESSION TRACKING
+       ============================================= */
+    function updateActivityTimestamp(id, type = 'student') {
+      const collection = type === 'teacher' ? 'teachers' : 'students';
+      const user = sdkLoad(collection, id);
+      if (user) {
+        user.lastActiveTimestamp = new Date().toISOString();
+        sdkSave(collection, id, user);
+      }
+    }
+
+    function getLastActivityTime(studentId) {
+      const student = sdkLoad('students', studentId);
+      if (!student?.lastActiveTimestamp) return 'Never';
+      
+      const lastTime = new Date(student.lastActiveTimestamp);
+      const now = new Date();
+      const diff = Math.round((now - lastTime) / 1000 / 60); /* minutes */
+      
+      if (diff < 1) return 'Just now';
+      if (diff < 60) return `${diff} min ago`;
+      
+      const hours = Math.round(diff / 60);
+      if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+      
+      const days = Math.round(hours / 24);
+      return `${days} day${days > 1 ? 's' : ''} ago`;
+    }
+
+    function isStudentOnline(studentId, thresholdMinutes = 30) {
+      const student = sdkLoad('students', studentId);
+      if (!student?.lastActiveTimestamp) return false;
+      
+      const lastTime = new Date(student.lastActiveTimestamp);
+      const now = new Date();
+      const diffMin = (now - lastTime) / 1000 / 60;
+      
+      return diffMin < thresholdMinutes;
+    }
+
+    /* =============================================
+       MATCHMAKING ENGINE (Priority: Live → Ghost → AI)
+       ============================================= */
+    function findOpponent(studentId, gloryPointRange = 5) {
+      const student = sdkLoad('students', studentId);
+      const playerGP = student?.gloryPoints || 0;
+      
+      /* PRIORITY 1: Find a real online player */
+      const allStudents = sdkLoadAll('students') || [];
+      const onlinePlayers = allStudents.filter(s => {
+        if (s._id === studentId) return false; /* Not self */
+        const opp = s; /* Assume gloryPoints stored directly */
+        const diff = Math.abs((opp.gloryPoints || 0) - playerGP);
+        return diff <= gloryPointRange && isStudentOnline(s._id);
+      });
+      
+      if (onlinePlayers.length > 0) {
+        const opponent = onlinePlayers[Math.floor(Math.random() * onlinePlayers.length)];
+        return {
+          type: 'live',
+          opponent: opponent,
+          mode: 'Live Match'
+        };
+      }
+      
+      /* PRIORITY 2: Find a player ghost */
+      const ghostPlayers = allStudents.filter(s => {
+        if (s._id === studentId) return false;
+        if (!s.playerGhost) return false;
+        const diff = Math.abs((s.playerGhost.gloryPoints || 0) - playerGP);
+        return diff <= gloryPointRange;
+      });
+      
+      if (ghostPlayers.length > 0) {
+        const ghostPlayer = ghostPlayers[Math.floor(Math.random() * ghostPlayers.length)];
+        return {
+          type: 'ghost',
+          ghost: ghostPlayer.playerGhost,
+          opponent: ghostPlayer,
+          mode: 'Ghost Replay'
+        };
+      }
+      
+      /* PRIORITY 3: Generate AI ghost */
+      const difficulty = Math.min(95, 70 + (playerGP * 0.1));
+      const aiGhost = generateAIGhost(difficulty);
+      return {
+        type: 'ai',
+        ghost: aiGhost,
+        opponent: null,
+        mode: 'AI Challenge'
+      };
+    }
+
+    function challengeStudent(challengerStudentId, targetStudentId) {
+      const target = sdkLoad('students', targetStudentId);
+      if (!target) return { success: false, message: 'Student not found' };
+      
+      const isOnline = isStudentOnline(targetStudentId);
+      
+      if (isOnline) {
+        /* Live match - use live duel */
+        return {
+          success: true,
+          type: 'live',
+          opponent: target,
+          mode: 'Live Challenge'
+        };
+      } else {
+        /* Offline match - use player ghost */
+        if (!target.playerGhost) {
+          return { success: false, message: 'No replay data available for this student' };
+        }
+        return {
+          success: true,
+          type: 'ghost',
+          ghost: target.playerGhost,
+          opponent: target,
+          mode: 'Ghost Replay Challenge'
+        };
+      }
+    }
+
+    /* =============================================
+       STUDENT SETTINGS & PENDING CHANGES SYSTEM
+       ============================================= */
+    function requestSettingChange(studentId, field, newValue, oldValue) {
+      const student = sdkLoad('students', studentId);
+      if (!student) return false;
+
+      /* Initialize pending changes if not exists */
+      if (!student.pendingChanges) {
+        student.pendingChanges = [];
+      }
+
+      /* Create pending change request */
+      const changeRequest = {
+        id: uuid(),
+        field: field,
+        oldValue: oldValue,
+        newValue: newValue,
+        requestedAt: new Date().toISOString(),
+        status: 'pending' /* 'pending', 'approved', 'rejected' */
+      };
+
+      student.pendingChanges.push(changeRequest);
+      sdkSave('students', studentId, student);
+      
+      return changeRequest;
+    }
+
+    function getPendingChanges(studentId) {
+      const student = sdkLoad('students', studentId);
+      if (!student || !student.pendingChanges) return [];
+      return student.pendingChanges.filter(c => c.status === 'pending');
+    }
+
+    function approvePendingChange(studentId, changeId) {
+      const student = sdkLoad('students', studentId);
+      if (!student || !student.pendingChanges) return false;
+
+      const change = student.pendingChanges.find(c => c.id === changeId);
+      if (!change) return false;
+
+      /* Apply the change */
+      student[change.field] = change.newValue;
+      
+      /* If class changed, update yearNumber, yearGroup, classLetter, keyStage */
+      if (change.field === 'classGrade') {
+        const classInfo = parseClassGrade(change.newValue);
+        student.yearNumber = classInfo.yearNum;
+        student.yearGroup = parseInt(classInfo.yearGroup);
+        student.classLetter = classInfo.classLetter;
+        student.keyStage = getKeyStage(classInfo.yearNum);
+      }
+
+      /* Mark change as approved */
+      change.status = 'approved';
+      change.approvedAt = new Date().toISOString();
+      
+      sdkSave('students', studentId, student);
+      return true;
+    }
+
+    function rejectPendingChange(studentId, changeId) {
+      const student = sdkLoad('students', studentId);
+      if (!student || !student.pendingChanges) return false;
+
+      const change = student.pendingChanges.find(c => c.id === changeId);
+      if (!change) return false;
+
+      change.status = 'rejected';
+      change.rejectedAt = new Date().toISOString();
+      
+      sdkSave('students', studentId, student);
+      return true;
+    }
+
+    /* =============================================
+       HOUSE TEAM MANAGER SYSTEM
+       ============================================= */
+    function getHouseTeamManager() {
+      const allTeachers = sdkLoadAll('teachers') || [];
+      return allTeachers.find(t => t.isHouseTeamManager);
+    }
+
+    function setAsHouseTeamManager(teacherId) {
+      /* Remove manager role from current manager */
+      const currentManager = getHouseTeamManager();
+      if (currentManager) {
+        currentManager.isHouseTeamManager = false;
+        sdkSave('teachers', currentManager._id, currentManager);
+      }
+
+      /* Set new manager */
+      const teacher = sdkLoad('teachers', teacherId);
+      if (teacher) {
+        teacher.isHouseTeamManager = true;
+        sdkSave('teachers', teacherId, teacher);
+        return true;
+      }
+      return false;
+    }
+
+    function requestManagerPosition(teacherId) {
+      const teacher = sdkLoad('teachers', teacherId);
+      if (!teacher) return false;
+
+      teacher.managershipRequest = {
+        requestedAt: new Date().toISOString(),
+        status: 'pending'
+      };
+
+      sdkSave('teachers', teacherId, teacher);
+      return true;
+    }
+
+    function getPendingManagerRequests() {
+      const allTeachers = sdkLoadAll('teachers') || [];
+      return allTeachers.filter(t => t.managershipRequest?.status === 'pending');
+    }
+
+    function approveManagerRequest(teacherId) {
+      return setAsHouseTeamManager(teacherId);
+    }
+
+    function rejectManagerRequest(teacherId) {
+      const teacher = sdkLoad('teachers', teacherId);
+      if (teacher) {
+        teacher.managershipRequest.status = 'rejected';
+        teacher.managershipRequest.rejectedAt = new Date().toISOString();
+        sdkSave('teachers', teacherId, teacher);
+        return true;
+      }
+      return false;
     }
 
     /* =============================================
@@ -3139,7 +3689,12 @@
         sportsCount: 0,
         lessonsDone: 0,
         achievements: [],
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        lastActiveTimestamp: new Date().toISOString(),
+        gloryPoints: 0,
+        playerGhost: null,
+        birthdate: '',
+        pendingChanges: []
       };
 
       /* Validate class info before saving */
@@ -3194,6 +3749,7 @@
       }
 
       saveSession(student._id, 'student');
+      updateActivityTimestamp(student._id);
       showToast('Welcome back!');
       showStudentApp(student._id);
     });
@@ -3243,7 +3799,10 @@
         email,
         password: hashedPassword,
         activated: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        lastActiveTimestamp: new Date().toISOString(),
+        isHouseTeamManager: false,
+        managershipRequest: null
       };
 
       sdkSave('teachers', id, teacherData);
@@ -3314,6 +3873,7 @@
       document.body.style.width = 'auto';
       
       currentStudentId = studentId;
+      updateActivityTimestamp(studentId);
       document.getElementById('studentApp').style.display = 'block';
       renderStudentDashboard(studentId);
 
@@ -3336,6 +3896,16 @@
           }
         }
       });
+
+      /* Periodic activity tracking (every 5 minutes) */
+      if (window.studentActivityInterval) {
+        clearInterval(window.studentActivityInterval);
+      }
+      window.studentActivityInterval = setInterval(() => {
+        if (currentStudentId && document.getElementById('studentApp').style.display === 'block') {
+          updateActivityTimestamp(currentStudentId);
+        }
+      }, 5 * 60 * 1000);
     }
 
     let currentTeacherId = null;
@@ -3349,12 +3919,23 @@
       document.body.style.width = 'auto';
       
       currentTeacherId = teacherId;
+      
+      /* Update teacher activity timestamp */
+      updateActivityTimestamp(teacherId, 'teacher');
+      
       document.getElementById('teacherApp').style.display = 'block';
       renderTeacherNotifications();
       renderClassOverview();
       renderSkillDefinitions();
       renderSportControls();
+      renderTeacherApprovals();
       renderWellDone();
+      
+      /* Start periodic activity tracking for teacher */
+      if (window.activityInterval) clearInterval(window.activityInterval);
+      window.activityInterval = setInterval(() => {
+        updateActivityTimestamp(teacherId, 'teacher');
+      }, 5 * 60 * 1000); // Every 5 minutes
     }
 
     /* =============================================
@@ -3370,6 +3951,10 @@
       if (section === 'classOverview') document.getElementById('tSectionClassOverview').classList.add('active');
       else if (section === 'skillDefs') document.getElementById('tSectionSkillDefs').classList.add('active');
       else if (section === 'sportControls') document.getElementById('tSectionSportControls').classList.add('active');
+      else if (section === 'approvals') {
+        document.getElementById('tSectionApprovals').classList.add('active');
+        renderTeacherApprovals();
+      }
       else if (section === 'wellDone') document.getElementById('tSectionWellDone').classList.add('active');
     });
 
@@ -4167,6 +4752,146 @@
     }
 
     /* =============================================
+       TEACHER APPROVALS
+       ============================================= */
+    function renderTeacherApprovals() {
+      const container = document.getElementById('tSectionApprovals');
+      const currentTeacher = sdkLoad('teachers', currentTeacherId);
+      if (!currentTeacher) {
+        container.innerHTML = '<p style="color:var(--text-2);">Unable to load teacher data.</p>';
+        return;
+      }
+
+      const allStudents = sdkLoadAll('students') || [];
+      const allTeachers = sdkLoadAll('teachers') || [];
+      
+      /* Collect all pending changes */
+      const pendingChanges = [];
+      allStudents.forEach(student => {
+        if (student.pendingChanges && Array.isArray(student.pendingChanges)) {
+          student.pendingChanges.forEach(change => {
+            if (change.status === 'pending') {
+              pendingChanges.push({...change, studentId: student._id, studentName: `${student.firstName} ${student.familyName}`});
+            }
+          });
+        }
+      });
+
+      /* Collect pending manager requests */
+      const pendingManagerRequests = [];
+      if (currentTeacher.isHouseTeamManager) {
+        allTeachers.forEach(teacher => {
+          if (teacher.managershipRequest && teacher.managershipRequest.status === 'pending') {
+            pendingManagerRequests.push({...teacher.managershipRequest, teacherId: teacher._id, teacherName: `${teacher.firstName} ${teacher.familyName}`});
+          }
+        });
+      }
+
+      let html = `<div class="approvals-container" style="max-width:900px;">
+        <h2 style="color:var(--text);margin-bottom:20px;">✅ Pending Approvals</h2>`;
+
+      /* Pending Student Change Requests */
+      if (pendingChanges.length === 0) {
+        html += `<div style="background:var(--surface-2);border-radius:8px;padding:20px;text-align:center;">
+          <p style="color:var(--text-2);font-size:0.95rem;">No pending change requests.</p>
+        </div>`;
+      } else {
+        html += `<div style="margin-bottom:24px;">
+          <h3 style="color:var(--text);margin-bottom:12px;font-size:1.1rem;">📝 Student Change Requests (${pendingChanges.length})</h3>`;
+        pendingChanges.forEach(change => {
+          const date = new Date(change.requestedAt).toLocaleString();
+          const fieldLabel = change.field.charAt(0).toUpperCase() + change.field.slice(1);
+          html += `<div style="background:var(--surface-2);border-left:4px solid var(--accent);border-radius:6px;padding:14px;margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;">
+              <div>
+                <div style="font-weight:600;color:var(--text);">${change.studentName}</div>
+                <div style="font-size:0.85rem;color:var(--text-2);">Requested ${date}</div>
+              </div>
+            </div>
+            <div style="background:var(--surface);padding:10px;border-radius:6px;margin-bottom:10px;font-size:0.85rem;">
+              <div style="color:var(--text-2);margin-bottom:4px;"><strong>${fieldLabel}</strong> change:</div>
+              <div style="color:var(--text);">
+                <span style="background:var(--surface-2);padding:4px 8px;border-radius:4px;">${change.oldValue || '(empty)'}</span>
+                <span style="margin:0 6px;color:var(--text-2);">→</span>
+                <span style="background:var(--accent);color:white;padding:4px 8px;border-radius:4px;font-weight:600;">${change.newValue}</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn-approve" data-change-id="${change.id}" data-student-id="${change.studentId}" style="flex:1;background:#4CAF50;color:white;border:none;padding:8px;border-radius:6px;cursor:pointer;font-weight:600;">✓ Approve</button>
+              <button class="btn-reject" data-change-id="${change.id}" data-student-id="${change.studentId}" style="flex:1;background:#f44336;color:white;border:none;padding:8px;border-radius:6px;cursor:pointer;font-weight:600;">✗ Reject</button>
+            </div>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+
+      /* Pending Manager Requests (only for current manager) */
+      if (currentTeacher.isHouseTeamManager && pendingManagerRequests.length > 0) {
+        html += `<div>
+          <h3 style="color:var(--text);margin-bottom:12px;font-size:1.1rem;">👤 Manager Position Requests (${pendingManagerRequests.length})</h3>`;
+        pendingManagerRequests.forEach(req => {
+          const date = new Date(req.requestedAt).toLocaleString();
+          html += `<div style="background:var(--surface-2);border-left:4px solid var(--warning);border-radius:6px;padding:14px;margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:start;">
+              <div>
+                <div style="font-weight:600;color:var(--text);">${req.teacherName}</div>
+                <div style="font-size:0.85rem;color:var(--text-2);">Requested ${date}</div>
+              </div>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:8px;">
+              <button class="btn-grant-manager" data-teacher-id="${req.teacherId}" style="flex:1;background:#2196F3;color:white;border:none;padding:8px;border-radius:6px;cursor:pointer;font-weight:600;">✓ Grant Role</button>
+              <button class="btn-reject-manager" data-teacher-id="${req.teacherId}" style="flex:1;background:#f44336;color:white;border:none;padding:8px;border-radius:6px;cursor:pointer;font-weight:600;">✗ Reject</button>
+            </div>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+
+      container.innerHTML = html;
+
+      /* Add event listeners for approve buttons */
+      document.querySelectorAll('.btn-approve').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const changeId = this.getAttribute('data-change-id');
+          const studentId = this.getAttribute('data-student-id');
+          approvePendingChange(studentId, changeId);
+          showToast('Change approved! ✓');
+          renderTeacherApprovals(); // Refresh
+        });
+      });
+
+      /* Add event listeners for reject buttons */
+      document.querySelectorAll('.btn-reject').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const changeId = this.getAttribute('data-change-id');
+          const studentId = this.getAttribute('data-student-id');
+          rejectPendingChange(studentId, changeId);
+          showToast('Change rejected. ✗');
+          renderTeacherApprovals(); // Refresh
+        });
+      });
+
+      /* Add event listeners for manager role buttons */
+      document.querySelectorAll('.btn-grant-manager').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const teacherId = this.getAttribute('data-teacher-id');
+          approveManagerRequest(teacherId);
+          showToast('Manager role granted! 👤');
+          renderTeacherApprovals(); // Refresh
+        });
+      });
+
+      document.querySelectorAll('.btn-reject-manager').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const teacherId = this.getAttribute('data-teacher-id');
+          rejectManagerRequest(teacherId);
+          showToast('Manager request rejected.');
+          renderTeacherApprovals(); // Refresh
+        });
+      });
+    }
+
+    /* =============================================
        STEP 20 - WELL DONE
        ============================================= */
     function renderWellDone() {
@@ -4410,13 +5135,18 @@
       if (!item) return;
       const section = item.getAttribute('data-section');
 
+      /* Track activity */
+      if (currentStudentId) {
+        updateActivityTimestamp(currentStudentId);
+      }
+
       /* Update nav */
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       item.classList.add('active');
 
       /* Show section */
       document.querySelectorAll('.student-section').forEach(s => s.classList.remove('active'));
-      const sectionMap = { home: 'sectionHome', arena: 'sectionArena', sports: 'sectionSports', quiz: 'sectionQuiz', housePoints: 'sectionHousePoints' };
+      const sectionMap = { home: 'sectionHome', arena: 'sectionArena', sports: 'sectionSports', quiz: 'sectionQuiz', housePoints: 'sectionHousePoints', settings: 'sectionSettings' };
       const target = document.getElementById(sectionMap[section]);
       if (target) target.classList.add('active');
 
@@ -4443,6 +5173,11 @@
       /* Render house points when housePoints tab is clicked */
       if (section === 'housePoints' && currentStudentId) {
         renderHousePoints(currentStudentId);
+      }
+
+      /* Render settings when settings tab is clicked */
+      if (section === 'settings' && currentStudentId) {
+        renderStudentSettings(currentStudentId);
       }
     });
 
@@ -4570,95 +5305,157 @@
       const student = sdkLoad('students', studentId);
       if (!student) return;
 
-      const stats = getArenaStats(student);
       const mainView = document.getElementById('arenaMainView');
+      let html = '';
 
-      let html = '<div class="arena-stats">';
-      html += '<div class="arena-stat">';
-      html += '<div class="arena-stat-label">Glory Points</div>';
-      html += '<div class="arena-stat-value">' + stats.gloryPoints + '</div>';
-      html += '</div>';
-      html += '<div class="arena-stat">';
-      html += '<div class="arena-stat-label">Wins</div>';
-      html += '<div class="arena-stat-value">' + stats.wins + '</div>';
-      html += '</div>';
+      /* Player stats and avatar */
+      html += '<div style="text-align:center;margin-bottom:16px;">';
+      html += renderAvatarHTML(student, true);
+      html += '<div style="margin-top:8px;font-size:0.95rem;"><strong>' + student.firstName + ' ' + student.familyName + '</strong></div>';
+      html += '<div style="font-size:0.85rem;color:var(--text-2);">' + (student.gloryPoints || 0) + ' Glory Points | ' + (student.arenaWins || 0) + ' Wins</div>';
       html += '</div>';
 
-      /* Find opponent - student with similar glory points +/- 5 */
-      const allStudents = sdkLoadAll('students') || [];
-      const potentialOpponents = allStudents.filter(s => {
-        const opp = getArenaStats(s);
-        const diff = Math.abs(opp.gloryPoints - stats.gloryPoints);
-        return s._id !== studentId && diff <= 5 && diff > 0;
-      });
-
-      let opponent = null;
-      if (potentialOpponents.length > 0) {
-        opponent = potentialOpponents[0];
-        opponent._isStudent = true;
-      } else {
-        /* Use master ghost */
-        const ghost = MASTER_GHOSTS[Math.floor(Math.random() * MASTER_GHOSTS.length)];
-        opponent = { ...ghost, _isGhost: true };
-      }
-
-      currentArenaOpponent = opponent;
-
-      /* Display matchup */
-      const oppStats = opponent._isGhost ? opponent : getArenaStats(opponent);
-      const oppName = opponent._isGhost ? opponent.name : `${opponent.firstName} ${opponent.familyName}`;
-      const oppGP = opponent._isGhost ? opponent.gloryPoints : oppStats.gloryPoints;
-
-      html += '<div class="arena-matchup">';
-      html += '<div class="arena-opponent">';
-      html += '<div style="font-size:2rem;margin-bottom:8px;">' + (opponent._isGhost ? opponent.emoji : '👤') + '</div>';
-      html += '<div class="arena-opponent-name">' + oppName + '</div>';
-      html += '<div class="arena-opponent-info">' + oppGP + ' GP</div>';
-      html += '</div>';
-      html += '<div class="arena-vs">⚔️</div>';
-      html += '<div class="arena-opponent">';
-      html += '<div style="font-size:2rem;margin-bottom:8px;">' + (student.house === 'Yellow' ? '💛' : student.house === 'Red' ? '❤️' : student.house === 'Green' ? '💚' : '💙') + '</div>';
-      html += '<div class="arena-opponent-name">You</div>';
-      html += '<div class="arena-opponent-info">' + stats.gloryPoints + ' GP</div>';
-      html += '</div>';
+      /* Challenge search section */
+      html += '<div style="margin-bottom:16px;padding:12px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">';
+      html += '<label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:8px;">Challenge a Specific Student</label>';
+      html += '<input type="text" id="arenaSearchInput" placeholder="Search by name..." style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:0.85rem;margin-bottom:8px;">';
+      html += '<div id="arenaSearchResults" style="max-height:200px;overflow-y:auto;"></div>';
       html += '</div>';
 
-      /* Challenge button */
-      html += '<button class="arena-battle-btn challenge" onclick="startArenaBattle()">Challenge Now</button>';
+      /* Quick matchmaking */
+      html += '<div style="margin-bottom:16px;">';
+      html += '<button class="arena-battle-btn challenge" onclick="startArenaBattle();updateActivityTimestamp(currentStudentId);" style="width:100%;margin-bottom:8px;">Find Random Opponent</button>';
+      html += '</div>';
 
-      html += '<div style="padding:12px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);font-size:0.85rem;color:var(--text-2);">';
-      html += '<strong>How it Works:</strong><br>';
-      html += '• Answer 5 rapid-fire questions against your opponent<br>';
-      html += '• Win by getting more correct answers<br>';
-      html += '• Win: +1 Glory Point | Loss: -1 Glory Point<br>';
-      html += '• Timer increases with your level (Agility stat)<br>';
+      /* Match type indicator */
+      html += '<div id="arcnaMatchTypeInfo" style="padding:12px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);font-size:0.85rem;color:var(--text-2);">';
+      html += '<strong>First to 10 Points Battle</strong><br>';
+      html += '• Your stats determine abilities<br>';
+      html += '• Agility: Time per question<br>';
+      html += '• Strength: Points multiplier (1.0x - 1.5x)<br>';
+      html += '• Flexibility: Skip questions<br>';
+      html += '• Win: +1 GP | Loss: -1 GP (clamped 0-100)<br>';
       html += '</div>';
 
       mainView.innerHTML = html;
       document.getElementById('arenaResultsView').style.display = 'none';
+
+      /* Setup search functionality */
+      const searchInput = document.getElementById('arenaSearchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+          const query = e.target.value.toLowerCase();
+          const resultsDiv = document.getElementById('arenaSearchResults');
+          
+          if (query.length < 2) {
+            resultsDiv.innerHTML = '';
+            return;
+          }
+          
+          const allStudents = sdkLoadAll('students') || [];
+          const matches = allStudents.filter(s => {
+            if (s._id === studentId) return false;
+            const name = `${s.firstName} ${s.familyName}`.toLowerCase();
+            return name.includes(query);
+          }).slice(0, 5);
+          
+          if (matches.length === 0) {
+            resultsDiv.innerHTML = '<div style="padding:8px;color:var(--text-2);">No students found</div>';
+            return;
+          }
+          
+          let resultsHTML = '';
+          matches.forEach(match => {
+            const gp = match.gloryPoints || 0;
+            const isOnline = isStudentOnline(match._id);
+            resultsHTML += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="challengeSpecificStudent('${match._id}');">`;
+            resultsHTML += `<div>`;
+            resultsHTML += `<div style="font-weight:600;font-size:0.9rem;">${match.firstName} ${match.familyName}</div>`;
+            resultsHTML += `<div style="font-size:0.75rem;color:var(--text-2);">${gp} GP ${isOnline ? '🟢 Online' : '⚫ Offline'}</div>`;
+            resultsHTML += `</div>`;
+            resultsHTML += `<button class="btn" style="padding:4px 12px;font-size:0.75rem;">Challenge</button>`;
+            resultsHTML += `</div>`;
+          });
+          
+          resultsDiv.innerHTML = resultsHTML;
+        });
+      }
     }
 
-    function startArenaBattle() {
+    function challengeSpecificStudent(targetStudentId) {
+      const result = challengeStudent(currentStudentId, targetStudentId);
+      
+      if (!result.success) {
+        showToast('❌ ' + result.message);
+        return;
+      }
+      
+      /* Start duel with specific opponent */
+      startArenaBattle(result);
+      updateActivityTimestamp(currentStudentId);
+    }
+
+    /* New duel variables */
+    let currentDuelType = null; /* 'live', 'ghost', 'ai' */
+    let currentOpponent = null;
+    let currentOpponentGhost = null;
+    let playerStats = null;
+    let opponentStats = null;
+    let duelSessionAnswers = [];
+    let duelSessionTimings = [];
+    let skipsUsed = 0;
+    let ghostQuestionIndex = 0;
+
+    function startArenaBattle(matchmakingResult = null) {
+      /* Get student data */
+      const student = sdkLoad('students', currentStudentId);
+      const level = getLevel(student.xp || 0);
+      playerStats = calculateAvatarStats(level);
+      
+      /* Use matchmaking result or auto-find opponent */
+      const matchResult = matchmakingResult || findOpponent(currentStudentId);
+      currentDuelType = matchResult.type;
+      currentOpponent = matchResult.opponent;
+      currentOpponentGhost = matchResult.ghost;
+      
+      /* Initialize opponent stats */
+      if (currentDuelType === 'live' && currentOpponent) {
+        const oppLevel = getLevel(currentOpponent.xp || 0);
+        opponentStats = calculateAvatarStats(oppLevel);
+      } else if (currentDuelType === 'ghost' && currentOpponentGhost) {
+        const oppLevel = currentOpponentGhost.level || 1;
+        opponentStats = calculateAvatarStats(oppLevel);
+      } else {
+        opponentStats = { level: 25, agility: 20, strength: 1.25, flexibility: 2 };
+      }
+      
+      /* Reset duel state */
       currentArenaMatchQuestion = 0;
       arenaPlayerScore = 0;
       arenaOpponentScore = 0;
       arenaQuestionsUsed = [];
-
+      duelSessionAnswers = [];
+      duelSessionTimings = [];
+      skipsUsed = 0;
+      ghostQuestionIndex = 0;
+      
       renderArenaBattleQuestion();
     }
 
     function renderArenaBattleQuestion() {
-      if (currentArenaMatchQuestion >= 5) {
+      /* Check win condition: first to 10 points */
+      if (arenaPlayerScore >= 10 || arenaOpponentScore >= 10) {
         completeArenaBattle();
         return;
       }
 
-      /* Clear previous timer if still running */
+      /* Clear previous timer */
       if (arenaTimerInterval) {
         clearInterval(arenaTimerInterval);
         arenaTimerInterval = null;
       }
 
+      /* Get random question */
       const topicIndex = Math.floor(Math.random() * 12);
       const questions = QUIZ_QUESTIONS_DATA[topicIndex] || [];
       let q = questions[Math.floor(Math.random() * questions.length)];
@@ -4668,28 +5465,39 @@
       }
       arenaQuestionsUsed.push(q.text);
 
-      const student = sdkLoad('students', currentStudentId);
-      const level = getLevel(student.xp || 0);
-      const baseTimer = 15 + (level - 1);
-
+      /* Calculate time per question based on Agility */
+      const timePerQuestion = Math.round(playerStats.agility);
+      
       const mainView = document.getElementById('arenaMainView');
-      mainView.innerHTML = `
-        <div style="text-align:center;margin-bottom:16px;">
-          <div style="font-size:0.9rem;color:var(--text-2);margin-bottom:8px;">Question ${currentArenaMatchQuestion + 1} of 5</div>
-          <div class="arena-timer" id="arenaTimer">${baseTimer}s</div>
-        </div>
-        <div class="arena-question">
-          <div class="arena-question-text">${q.text}</div>
-          <div id="arenaOptions">
-            ${q.options.map((opt, i) => `<button class="quiz-option" style="width:100%;margin-bottom:8px;" onclick="handleArenaAnswer(${i}, ${q.correct})">${opt}</button>`).join('')}
-          </div>
-        </div>
-        <div style="margin-top:12px;padding:12px;background:var(--surface-2);border-radius:8px;font-size:0.8rem;color:var(--text-2);text-align:center;">
-          <strong>You: ${arenaPlayerScore}</strong> | <strong>Opponent: ${arenaOpponentScore}</strong>
-        </div>
-      `;
+      let html = `<div style="text-align:center;margin-bottom:16px;">`;
+      html += `<div style="font-size:0.9rem;color:var(--text-2);margin-bottom:4px;">First to 10 Points</div>`;
+      html += `<div style="font-size:0.85rem;color:var(--text-2);margin-bottom:8px;">Points: You ${arenaPlayerScore} / Opponent ${arenaOpponentScore}</div>`;
+      html += `<div class="arena-timer" id="arenaTimer">${timePerQuestion}s</div>`;
+      html += `</div>`;
+      
+      html += `<div class="arena-question">`;
+      html += `<div class="arena-question-text">${q.text}</div>`;
+      html += `<div id="arenaOptions">`;
+      html += q.options.map((opt, i) => 
+        `<button class="quiz-option" style="width:100%;margin-bottom:8px;" onclick="handleArenaAnswer(${i}, ${q.correct})">${opt}</button>`
+      ).join('');
+      html += `</div>`;
+      
+      /* Skip button */
+      const remainingSkips = playerStats.flexibility - skipsUsed;
+      html += `<button id="skipBtn" onclick="handleArenaSkip()" style="width:100%;margin-top:8px;padding:8px;background:var(--surface-2);border:2px solid var(--border);border-radius:8px;color:var(--text-2);cursor:${remainingSkips > 0 ? 'pointer' : 'not-allowed'};opacity:${remainingSkips > 0 ? 1 : 0.5};">`;
+      html += `Skip (${remainingSkips}/${playerStats.flexibility})</button>`;
+      
+      html += `</div>`;
+      html += `<div style="margin-top:12px;padding:12px;background:var(--surface-2);border-radius:8px;font-size:0.8rem;color:var(--text-2);text-align:center;">`;
+      html += `<strong>Your Stats:</strong> ⚡${playerStats.agility}s | 💪${(playerStats.strength*100).toFixed(0)}% | 🔄${playerStats.flexibility}`;
+      html += `</div>`;
+      
+      mainView.innerHTML = html;
 
-      let timeLeft = baseTimer;
+      let timeLeft = timePerQuestion;
+      const questionStartTime = Date.now();
+      
       arenaTimerInterval = setInterval(() => {
         timeLeft--;
         const timerEl = document.getElementById('arenaTimer');
@@ -4703,42 +5511,98 @@
           handleArenaAnswer(-1, q.correct);
         }
       }, 1000);
+      
+      /* Store for ghost replay later */
+      window.currentQuestionData = { correct: q.correct, startTime: questionStartTime };
+    }
+
+    function handleArenaSkip() {
+      const remaining = playerStats.flexibility - skipsUsed;
+      if (remaining > 0) {
+        skipsUsed++;
+        /* Record skip as incorrect answer (no points) */
+        duelSessionAnswers.push(false);
+        duelSessionTimings.push(0);
+        handleArenaOpponentResponse();
+        renderArenaBattleQuestion();
+      }
     }
 
     function handleArenaAnswer(selectedIdx, correct) {
-      /* Clear timer immediately to prevent overlap */
+      /* Clear timer */
       if (arenaTimerInterval) {
         clearInterval(arenaTimerInterval);
         arenaTimerInterval = null;
       }
 
-      if (selectedIdx === correct) {
-        arenaPlayerScore++;
+      let answerCorrect = selectedIdx === correct;
+      duelSessionAnswers.push(answerCorrect);
+      
+      /* Calculate time taken */
+      const timeTaken = window.currentQuestionData ? 
+        Math.round((Date.now() - window.currentQuestionData.startTime) / 1000) : 
+        Math.round(playerStats.agility);
+      duelSessionTimings.push(timeTaken);
+
+      /* Award points with Strength multiplier */
+      if (answerCorrect) {
+        const pointsAwarded = Math.round(playerStats.strength);
+        arenaPlayerScore += pointsAwarded;
       }
 
-      /* Simulate opponent answering */
-      if (Math.random() < 0.7) {
-        arenaOpponentScore++;
-      }
-
-      currentArenaMatchQuestion++;
+      handleArenaOpponentResponse();
       renderArenaBattleQuestion();
+    }
+
+    function handleArenaOpponentResponse() {
+      if (currentDuelType === 'ghost' && currentOpponentGhost) {
+        /* Replay ghost answer */
+        const ghostCorrect = replayGhostAnswer(currentOpponentGhost, ghostQuestionIndex);
+        if (ghostCorrect) {
+          const oppLevel = currentOpponentGhost.level || 1;
+          const oppStats = calculateAvatarStats(oppLevel);
+          const pointsAwarded = Math.round(oppStats.strength);
+          arenaOpponentScore += pointsAwarded;
+        }
+        ghostQuestionIndex++;
+      } else if (currentDuelType === 'ai' && currentOpponentGhost?.isAI) {
+        /* AI ghost logic */
+        const correctProb = currentOpponentGhost.accuracy / 100;
+        if (Math.random() < correctProb) {
+          const pointsAwarded = Math.round(opponentStats.strength);
+          arenaOpponentScore += pointsAwarded;
+        }
+      } else if (currentDuelType === 'live') {
+        /* Live opponent - simulate based on their stats */
+        const winProb = 0.5 + (opponentStats.strength - playerStats.strength) * 0.1;
+        if (Math.random() < winProb) {
+          const pointsAwarded = Math.round(opponentStats.strength);
+          arenaOpponentScore += pointsAwarded;
+        }
+      }
     }
 
     function completeArenaBattle() {
       const student = sdkLoad('students', currentStudentId);
-      const stats = getArenaStats(student);
       const won = arenaPlayerScore > arenaOpponentScore;
 
-      /* Update glory points */
-      if (won) {
-        stats.gloryPoints = Math.min(100, stats.gloryPoints + 1);
-        stats.wins = (stats.wins || 0) + 1;
-        setArenaStats(student, stats);
-      } else {
-        stats.gloryPoints = Math.max(0, stats.gloryPoints - 1);
-        setArenaStats(student, stats);
-      }
+      /* Save this duel as player ghost for future opponents */
+      createPlayerGhost(
+        currentStudentId,
+        duelSessionAnswers,
+        duelSessionTimings,
+        arenaPlayerScore
+      );
+
+      /* Update glory points (±1) */
+      const currentGP = student?.gloryPoints || 0;
+      const newGP = won ? 
+        Math.min(100, currentGP + 1) : 
+        Math.max(0, currentGP - 1);
+      
+      student.gloryPoints = newGP;
+      student.arenaWins = (student.arenaWins || 0) + (won ? 1 : 0);
+      sdkSave('students', currentStudentId, student);
 
       const resultsView = document.getElementById('arenaResultsView');
       resultsView.style.display = '';
@@ -4747,11 +5611,20 @@
       let html = `<div class="arena-result-card">`;
       html += `<div class="arena-result-big">${won ? '🏆' : '💪'}</div>`;
       html += `<div class="arena-result-text">${won ? 'Victory!' : 'Defeat'}</div>`;
-      html += `<div style="margin:12px 0;font-size:1rem;">`;
-      html += `You: <strong>${arenaPlayerScore}</strong> | Opponent: <strong>${arenaOpponentScore}</strong>`;
+      
+      html += `<div style="margin:12px 0;font-size:0.95rem;">`;
+      html += `<strong>${arenaPlayerScore}</strong> vs <strong>${arenaOpponentScore}</strong>`;
       html += `</div>`;
+      
+      html += `<div style="margin:8px 0;font-size:0.85rem;color:var(--text-2);">`;
+      html += `${currentDuelType === 'live' ? '⚔️ Live Match' : currentDuelType === 'ghost' ? '👻 Ghost Replay' : '🤖 AI Challenge'}`;
+      html += `</div>`;
+      
       html += `<div class="arena-gp-change">${won ? '+1' : '-1'} Glory Point</div>`;
-      html += `<div style="margin-top:12px;color:var(--text-2);font-size:0.85rem;">Glory Points now: ${stats.gloryPoints} / 100</div>`;
+      html += `<div style="margin-top:12px;color:var(--text-2);font-size:0.85rem;">`;
+      html += `Glory Points: ${newGP} / 100`;
+      html += `</div>`;
+      
       html += `</div>`;
       html += `<button class="btn btn-primary btn-block" onclick="renderArena(currentStudentId);document.getElementById('arenaResultsView').style.display='none';document.getElementById('arenaMainView').style.display='';">Back to Arena</button>`;
 
@@ -6627,6 +7500,130 @@
       `;
 
       document.getElementById('housePointsContent').innerHTML = html;
+    }
+
+    function renderStudentSettings(studentId) {
+      const student = sdkLoad('students', studentId);
+      if (!student) return;
+
+      const pendingChanges = getPendingChanges(studentId);
+      
+      let html = `<div style="max-width:600px;padding:16px;">`;
+
+      /* Account Info Section */
+      html += `<div style="margin-bottom:20px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">`;
+      html += `<h3 style="margin-bottom:12px;font-size:1rem;">📋 Account Information</h3>`;
+      
+      /* Email - direct update */
+      html += `<div class="form-group">`;
+      html += `<label>📧 Email</label>`;
+      html += `<input type="email" id="settEmail" value="${student.email || ''}" class="form-input" placeholder="Enter email">`;
+      html += `<button onclick="updateStudentField('email', document.getElementById('settEmail').value)" class="btn btn-primary" style="width:100%;margin-top:8px;">Save Email</button>`;
+      html += `</div>`;
+
+      /* Birthdate - direct update */
+      html += `<div class="form-group">`;
+      html += `<label>🎂 Birthdate</label>`;
+      html += `<input type="date" id="settBirthdate" value="${student.birthdate || ''}" class="form-input">`;
+      html += `<button onclick="updateStudentField('birthdate', document.getElementById('settBirthdate').value)" class="btn btn-primary" style="width:100%;margin-top:8px;">Save Birthdate</button>`;
+      html += `</div>`;
+      
+      html += `</div>`;
+
+      /* Pending Approval Section */
+      html += `<div style="margin-bottom:20px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">`;
+      html += `<h3 style="margin-bottom:12px;font-size:1rem;">⏳ Awaiting Manager Approval</h3>`;
+
+      if (pendingChanges.length === 0) {
+        html += `<div style="color:var(--text-2);font-size:0.9rem;">No pending changes</div>`;
+      } else {
+        pendingChanges.forEach(change => {
+          const fieldNames = {
+            'classGrade': '📚 Class',
+            'yearGroup': '📅 Year Group',
+            'house': '🏠 House Team'
+          };
+          html += `<div style="padding:8px;background:var(--surface);border-radius:6px;margin-bottom:8px;font-size:0.9rem;">`;
+          html += `<div><strong>${fieldNames[change.field] || change.field}</strong></div>`;
+          html += `<div style="color:var(--text-2);font-size:0.85rem;">Current: ${change.oldValue}</div>`;
+          html += `<div style="color:var(--accent);font-size:0.85rem;">Requested: ${change.newValue}</div>`;
+          html += `<div style="color:var(--text-2);font-size:0.75rem;margin-top:4px;">Requested: ${new Date(change.requestedAt).toLocaleDateString()}</div>`;
+          html += `</div>`;
+        });
+      }
+      html += `</div>`;
+
+      /* Editable Fields Requiring Approval */
+      html += `<div style="margin-bottom:20px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">`;
+      html += `<h3 style="margin-bottom:12px;font-size:1rem;">🔒 Requires Manager Approval</h3>`;
+
+      /* Class/Grade */
+      html += `<div class="form-group">`;
+      html += `<label>📚 Class / Grade</label>`;
+      const classOptions = [];
+      for (let year = 1; year <= 13; year++) {
+        ['C', 'H', 'I', 'S', 'J', 'B'].forEach(letter => {
+          classOptions.push(`Year ${year}${letter}`);
+        });
+      }
+      html += `<select id="settClass" class="form-select">`;
+      html += `<option value="">Select class...</option>`;
+      classOptions.forEach(opt => {
+        const selected = student.classGrade === opt ? ' selected' : '';
+        html += `<option value="${opt}"${selected}>${opt}</option>`;
+      });
+      html += `</select>`;
+      html += `<button onclick="requestFieldChange('classGrade', document.getElementById('settClass').value)" class="btn btn-primary" style="width:100%;margin-top:8px;">Request Change</button>`;
+      html += `</div>`;
+
+      /* House Team */
+      html += `<div class="form-group">`;
+      html += `<label>🏠 House Team</label>`;
+      const houses = ['Yellow', 'Red', 'Green', 'Blue'];
+      html += `<select id="settHouse" class="form-select">`;
+      html += `<option value="">Select house...</option>`;
+      houses.forEach(h => {
+        const selected = student.house === h ? ' selected' : '';
+        html += `<option value="${h}"${selected}>${h}</option>`;
+      });
+      html += `</select>`;
+      html += `<button onclick="requestFieldChange('house', document.getElementById('settHouse').value)" class="btn btn-primary" style="width:100%;margin-top:8px;">Request Change</button>`;
+      html += `</div>`;
+
+      html += `</div>`;
+      html += `</div>`;
+
+      document.getElementById('settingsContent').innerHTML = html;
+    }
+
+    function updateStudentField(field, value) {
+      const student = sdkLoad('students', currentStudentId);
+      if (!student) return;
+
+      student[field] = value;
+      sdkSave('students', currentStudentId, student);
+      showToast(`✓ ${field.charAt(0).toUpperCase() + field.slice(1)} updated!`);
+      updateActivityTimestamp(currentStudentId);
+    }
+
+    function requestFieldChange(field, value) {
+      if (!value) {
+        showToast('❌ Please select a value');
+        return;
+      }
+
+      const student = sdkLoad('students', currentStudentId);
+      const oldValue = student[field];
+
+      if (oldValue === value) {
+        showToast('❌ No change to request');
+        return;
+      }
+
+      requestSettingChange(currentStudentId, field, value, oldValue);
+      showToast(`✓ Change requested and awaiting manager approval`);
+      renderStudentSettings(currentStudentId);
+      updateActivityTimestamp(currentStudentId);
     }
 
     /* =============================================
