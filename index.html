@@ -285,6 +285,205 @@
     }
 
     /* =============================================
+       ADMIN PANELS - SEASON & USER MANAGEMENT
+       ============================================= */
+    .admin-panel {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid var(--border);
+    }
+
+    .admin-panel h3 {
+      font-size: 1.25rem;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    /* =============================================
+       ADMIN TABS - HORIZONTAL TAB NAVIGATION
+       ============================================= */
+    .admin-tabs-container {
+      width: 100%;
+    }
+
+    .admin-tabs-header {
+      display: flex;
+      gap: 8px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .admin-tab {
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--text-2);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      position: relative;
+      bottom: -2px;
+    }
+
+    .admin-tab:hover {
+      color: var(--text);
+      background: var(--surface-2);
+      border-bottom-color: var(--theme-accent-info);
+    }
+
+    .admin-tab.active {
+      color: var(--theme-accent-cta);
+      border-bottom-color: var(--theme-accent-cta);
+      background: transparent;
+    }
+
+    .admin-tabs-content {
+      width: 100%;
+    }
+
+    .admin-tab-pane {
+      display: none;
+      animation: fadeIn var(--transition);
+    }
+
+    .admin-tab-pane.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .admin-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .admin-filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--surface-2);
+      border-radius: 8px;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .admin-table thead {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+
+    .admin-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+
+    .admin-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+
+    .admin-table tbody tr:hover {
+      background: var(--surface-2);
+    }
+
+    .admin-table input[type="checkbox"] {
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .admin-danger {
+      background: var(--house-red);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+    }
+
+    .admin-danger:hover:not(:disabled) {
+      filter: brightness(1.08);
+      box-shadow: 0 6px 16px rgba(220, 53, 69, 0.6);
+    }
+
+    .admin-danger:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .season-info-box {
+      background: var(--surface-2);
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      border-left: 4px solid var(--accent);
+    }
+
+    .season-info-box p {
+      margin: 8px 0;
+      font-size: 0.9rem;
+    }
+
+    .confirmation-input {
+      width: 100%;
+      margin: 12px 0;
+      padding: 10px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-family: monospace;
+    }
+
+    .confirmation-input:focus {
+      border-color: var(--accent);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+    .confirmation-input.valid {
+      border-color: var(--theme-accent-reward);
+      background: rgba(0, 217, 161, 0.1);
+    }
+
+    .admin-highlight {
+      background: rgba(220, 53, 69, 0.1);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border-left: 3px solid var(--house-red);
+      margin: 12px 0;
+      font-size: 0.9rem;
+    }
+
+    .season-history-export {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    /* =============================================
        BUTTONS
        ============================================= */
     .btn {
@@ -1699,6 +1898,51 @@
 
     .practice-form .form-group { margin-bottom: 16px; }
     .practice-form label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.9rem; color: var(--text); }
+    
+    /* Custom topic styling for lesson tiles */
+    .tile-label.custom-topic {
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.3px;
+    }
+    
+    /* Custom lesson info in teacher view */
+    .custom-lesson-info {
+      background: rgba(102, 126, 234, 0.08);
+      border-left: 3px solid var(--accent);
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin: 4px 0;
+      font-size: 0.85rem;
+    }
+    .custom-lesson-info strong {
+      color: var(--accent);
+    }
+    
+    /* Last Connection styling */
+    .student-last-connection {
+      font-size: 0.75rem;
+      color: var(--text-2);
+      margin-top: 2px;
+      font-weight: 500;
+    }
+    
+    /* Inactive alert (7+ days) - red styling */
+    .student-list-item .student-last-connection[style*="color: var(--error"] {
+      animation: pulse-red 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-red {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    /* Mobile responsiveness for Last Connection */
+    @media (max-width: 768px) {
+      .student-last-connection {
+        font-size: 0.7rem;
+      }
+    }
 
     .assessment-preview {
       background: var(--surface-2);
@@ -1707,6 +1951,145 @@
       margin: 16px 0;
       text-align: center;
       font-weight: 600;
+    }
+    
+    /* Bulk Assessment Matrix Styles */
+    .bulk-assessment-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .bulk-assessment-table thead {
+      background: var(--surface-2);
+      border-bottom: 2px solid var(--border);
+    }
+    
+    .bulk-assessment-table th {
+      padding: 12px 8px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--text);
+      font-size: 0.85rem;
+      border-right: 1px solid var(--border);
+    }
+    
+    .bulk-assessment-table th:last-child {
+      border-right: none;
+    }
+    
+    .bulk-assessment-table th.student-col {
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background: var(--surface-2);
+      z-index: 10;
+      min-width: 150px;
+      border-right: 2px solid var(--border);
+    }
+    
+    .skill-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .skill-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .bulk-assessment-table td {
+      padding: 12px 8px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .bulk-assessment-table td:last-child {
+      border-right: none;
+    }
+    
+    .bulk-assessment-table td.student-col {
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background: var(--surface);
+      z-index: 9;
+      min-width: 150px;
+      font-weight: 500;
+      border-right: 2px solid var(--border);
+    }
+    
+    .level-selector {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .level-btn {
+      min-width: 30px;
+      height: 30px;
+      padding: 2px 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 4px;
+      border: 2px solid;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .level-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    
+    .level-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .skill-col {
+      min-width: 140px;
+    }
+    
+    /* Mobile responsiveness for bulk assessment */
+    @media (max-width: 1024px) {
+      .skill-header {
+        font-size: 0.75rem;
+      }
+      
+      .level-btn {
+        min-width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .bulk-assessment-table th,
+      .bulk-assessment-table td {
+        padding: 8px 4px;
+      }
+      
+      .level-btn {
+        min-width: 20px;
+        height: 20px;
+        padding: 1px 2px;
+        font-size: 0.65rem;
+      }
+      
+      .bulk-assessment-table th.student-col {
+        min-width: 100px;
+      }
+      
+      .bulk-assessment-table td.student-col {
+        min-width: 100px;
+      }
     }
     .assessment-warning {
       font-size: 0.75rem;
@@ -1940,6 +2323,41 @@
     .house-top10.open { display: block; }
     .house-top10 .top-student { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem; }
 
+    /* Rivals Table */
+    .rivals-table {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .rival-row {
+      display: grid;
+      grid-template-columns: 60px 1fr 80px 80px 120px;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      font-size: 0.9rem;
+    }
+    @media (max-width: 600px) {
+      .rival-row {
+        grid-template-columns: 50px 1fr 70px 70px 100px;
+        gap: 8px;
+        padding: 10px 12px;
+        font-size: 0.8rem;
+      }
+      .rival-status { font-size: 0.75rem; }
+    }
+    .rival-row:last-child { border-bottom: none; }
+    .rival-row.current-user {
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .rival-rank { font-weight: 700; color: var(--text-2); }
+    .rival-name { font-weight: 500; }
+    .rival-house { font-weight: 600; }
+    .rival-points { text-align: right; font-weight: 600; }
+    .rival-status { text-align: right; font-size: 0.8rem; color: var(--text-2); }
+
     .hp-personal {
       background: var(--surface);
       border-radius: 12px;
@@ -2041,6 +2459,15 @@
       color: var(--accent);
       border-bottom-color: var(--accent);
     }
+
+    .admin-nav-item {
+      display: none !important;
+    }
+
+    .admin-nav-item.visible {
+      display: inline-flex !important;
+    }
+
     .teacher-section { display: none; padding: 12px; opacity: 0; transition: opacity 200ms ease; }
     .teacher-section.active { display: block; opacity: 1; }
 
@@ -2326,9 +2753,16 @@
           </div>
 
           <div class="form-group">
-            <label for="srStudentId">Student ID</label>
+            <label for="srStudentId">Student ID (For System)</label>
             <input type="text" id="srStudentId" class="form-input" placeholder="Enter unique student ID" required>
             <div class="form-error" id="srStudentIdErr">Student ID is required and must be unique.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="srAuthId">🔐 Authorized ID (Required)</label>
+            <input type="text" id="srAuthId" class="form-input" placeholder="Enter your Authorized ID" required>
+            <div class="form-error" id="srAuthIdErr">Authorized ID is required (provided by House Team Manager).</div>
+            <small style="color:var(--text-2);font-size:0.8rem;margin-top:4px;">This ID must be on the approved list from your House Team Manager.</small>
           </div>
 
           <div class="form-group">
@@ -2463,15 +2897,28 @@
           </div>
 
           <div class="form-group">
-            <label for="trTeacherId">Teacher ID</label>
+            <label for="trTeacherId">Teacher ID (For System)</label>
             <input type="text" id="trTeacherId" class="form-input" placeholder="Enter unique Teacher ID" required>
             <div class="form-error" id="trTeacherIdErr">Teacher ID is required and must be unique.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="trAuthId">🔐 Authorized ID (Required)</label>
+            <input type="text" id="trAuthId" class="form-input" placeholder="Enter your Authorized ID" required>
+            <div class="form-error" id="trAuthIdErr">Authorized ID is required (provided by House Team Manager).</div>
+            <small style="color:var(--text-2);font-size:0.8rem;margin-top:4px;">This ID must be on the approved list from your House Team Manager.</small>
           </div>
 
           <div class="form-group">
             <label for="trEmail">Email</label>
             <input type="email" id="trEmail" class="form-input" placeholder="Enter email address" required>
             <div class="form-error" id="trEmailErr">Valid email is required.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="trManagerCode">Manager SignUp Code (Optional)</label>
+            <input type="text" id="trManagerCode" class="form-input" placeholder="Leave blank unless becoming manager">
+            <div class="form-error" id="trManagerCodeErr">Invalid manager code.</div>
           </div>
 
           <div class="form-group">
@@ -2696,17 +3143,36 @@
     </div>
     <nav class="teacher-nav" id="teacherNav">
       <button class="nav-item active" data-section="classOverview">📋 Class Overview</button>
+      <button class="nav-item" data-section="bulkAssessment">📊 Bulk Assessment</button>
       <button class="nav-item" data-section="skillDefs">✏️ Skill Definitions</button>
       <button class="nav-item" data-section="sportControls">⚙️ Sport Controls</button>
       <button class="nav-item" data-section="approvals">✅ Approvals</button>
       <button class="nav-item" data-section="wellDone">🏅 Well Done!</button>
+      <button class="nav-item" data-section="settings">⚙️ Settings</button>
+      <button class="nav-item admin-nav-item" data-section="adminManagement">⚙️ Admin Management</button>
     </nav>
     <div class="app-body teacher-body">
       <div class="teacher-section active" id="tSectionClassOverview"></div>
+      <div class="teacher-section" id="tSectionBulkAssessment"></div>
       <div class="teacher-section" id="tSectionSkillDefs"></div>
       <div class="teacher-section" id="tSectionSportControls"></div>
       <div class="teacher-section" id="tSectionApprovals"></div>
       <div class="teacher-section" id="tSectionWellDone"></div>
+      <div class="teacher-section" id="tSectionSettings"></div>
+      <div class="teacher-section admin-section" id="tSectionAdminManagement">
+        <div class="admin-tabs-container">
+          <div class="admin-tabs-header">
+            <button class="admin-tab active" data-admin-tab="seasonManagement">📅 Season Management</button>
+            <button class="admin-tab" data-admin-tab="userManagement">👥 User Management</button>
+            <button class="admin-tab" data-admin-tab="idManagement">🔐 ID Management</button>
+          </div>
+          <div class="admin-tabs-content">
+            <div class="admin-tab-pane active" id="adminTabSeasonManagement"></div>
+            <div class="admin-tab-pane" id="adminTabUserManagement"></div>
+            <div class="admin-tab-pane" id="adminTabIdManagement"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2947,6 +3413,101 @@
     }
 
     /* =============================================
+       GLOBAL ID ENFORCEMENT TOGGLE MANAGEMENT
+       ============================================= */
+    function getEnforceIdToggle() {
+      const settings = sdkLoad('globalSettings', 'idEnforcement') || { enforceIdToggle: false };
+      return settings.enforceIdToggle === true; // Default to false (OFF = flexible mode)
+    }
+
+    function setEnforceIdToggle(enabled) {
+      const settings = { enforceIdToggle: enabled };
+      sdkSave('globalSettings', 'idEnforcement', settings);
+      console.log('[ID Enforcement Toggle] Set to:', enabled ? 'ON (Strict)' : 'OFF (Flexible)');
+      return enabled;
+    }
+
+    /* =============================================
+       ID VALIDATION & GATEKEEPER SYSTEM
+       ============================================= */
+    async function validateAuthorizedId(idValue, userType) {
+      // userType: 'student' or 'teacher'
+      if (!idValue || !idValue.trim()) {
+        return { valid: false, error: 'ID is required' };
+      }
+      
+      const trimmedId = idValue.trim().toUpperCase();
+      const enforceIdToggle = getEnforceIdToggle();
+      
+      // Check if ID is already in use (duplicate prevention - ALWAYS enforced)
+      const allStudents = sdkLoadAll('students') || [];
+      const allTeachers = sdkLoadAll('teachers') || [];
+      const isDuplicate = allStudents.some(s => s.studentId === trimmedId || s.authorizedId === trimmedId) ||
+                          allTeachers.some(t => t.teacherId === trimmedId || t.authorizedId === trimmedId);
+      
+      if (isDuplicate) {
+        return { valid: false, error: 'This ID is already in use by another user.' };
+      }
+      
+      // If toggle is OFF, accept any ID
+      if (!enforceIdToggle) {
+        console.log('[ID Validation] Toggle OFF - accepting any unique ID');
+        return { valid: true, presetFirstName: '', presetLastName: '' };
+      }
+      
+      // Toggle is ON - validate against Authorized_IDs whitelist
+      const authorizedRecord = sdkLoad('authorizedIds', trimmedId);
+      
+      if (!authorizedRecord) {
+        return { valid: false, error: 'ID not recognized. Please check for typos or contact your PE Teacher.' };
+      }
+      
+      // Check if ID type matches (student/teacher)
+      if (authorizedRecord.type !== userType) {
+        return { valid: false, error: `This ID is registered for ${authorizedRecord.type}s, not ${userType}s.` };
+      }
+      
+      // Check if already registered
+      if (authorizedRecord.registered) {
+        return { valid: false, error: 'This ID has already been registered.' };
+      }
+      
+      // Valid - return preset names if available
+      return { 
+        valid: true, 
+        presetFirstName: authorizedRecord.presetFirstName || '',
+        presetLastName: authorizedRecord.presetLastName || ''
+      };
+    }
+
+    function linkAuthorizedId(idValue, userType, userId) {
+      // Update the authorized record to mark as registered (only if toggle is ON)
+      const trimmedId = idValue.trim().toUpperCase();
+      const enforceIdToggle = getEnforceIdToggle();
+      
+      if (enforceIdToggle) {
+        const authorizedRecord = sdkLoad('authorizedIds', trimmedId);
+        
+        if (!authorizedRecord) return false;
+        
+        authorizedRecord.registered = true;
+        authorizedRecord.lastAttempt = new Date().toISOString();
+        
+        if (userType === 'student') {
+          authorizedRecord.linkedStudentId = userId;
+        } else if (userType === 'teacher') {
+          authorizedRecord.linkedTeacherId = userId;
+        }
+        
+        sdkSave('authorizedIds', trimmedId, authorizedRecord);
+        return true;
+      }
+      
+      // Toggle is OFF - no need to update authorized record
+      return true;
+    }
+
+    /* =============================================
        LEVEL THRESHOLDS
        ============================================= */
     const LEVEL_THRESHOLDS = [
@@ -3181,6 +3742,31 @@
       const days = Math.round(hours / 24);
       return `${days} day${days > 1 ? 's' : ''} ago`;
     }
+    
+    /* ---- getRelativeTime (for teacher view display) ---- */
+    function getRelativeTime(isoTimestamp) {
+      if (!isoTimestamp) return 'Never logged in';
+      
+      const lastTime = new Date(isoTimestamp);
+      const now = new Date();
+      const diffMs = now - lastTime;
+      const diffMins = Math.round(diffMs / 1000 / 60);
+      
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins} min ago`;
+      
+      const diffHours = Math.round(diffMins / 60);
+      if (diffHours < 24) return `${diffHours}h ago`;
+      
+      const diffDays = Math.round(diffHours / 24);
+      if (diffDays < 30) return `${diffDays}d ago`;
+      
+      const diffWeeks = Math.round(diffDays / 7);
+      if (diffWeeks < 4) return `${diffWeeks}w ago`;
+      
+      const diffMonths = Math.round(diffDays / 30);
+      return `${diffMonths}mo ago`;
+    }
 
     function isStudentOnline(studentId, thresholdMinutes = 30) {
       const student = sdkLoad('students', studentId);
@@ -3318,6 +3904,7 @@
       if (!change) return false;
 
       /* Apply the change */
+      const oldValue = student[change.field];
       student[change.field] = change.newValue;
       
       /* If class changed, update yearNumber, yearGroup, classLetter, keyStage */
@@ -3327,6 +3914,28 @@
         student.yearGroup = parseInt(classInfo.yearGroup);
         student.classLetter = classInfo.classLetter;
         student.keyStage = getKeyStage(classInfo.yearNum);
+      }
+
+      /* Special handling for authorizedId changes */
+      if (change.field === 'authorizedId') {
+        /* Unregister the old ID */
+        if (oldValue) {
+          const oldAuthRecord = sdkLoad('authorizedIds', oldValue.toUpperCase());
+          if (oldAuthRecord) {
+            oldAuthRecord.registered = false;
+            oldAuthRecord.linkedStudentId = null;
+            sdkSave('authorizedIds', oldValue.toUpperCase(), oldAuthRecord);
+          }
+        }
+        
+        /* Register the new ID */
+        const newAuthRecord = sdkLoad('authorizedIds', change.newValue.toUpperCase());
+        if (newAuthRecord) {
+          newAuthRecord.registered = true;
+          newAuthRecord.linkedStudentId = studentId;
+          newAuthRecord.lastAttempt = new Date().toISOString();
+          sdkSave('authorizedIds', change.newValue.toUpperCase(), newAuthRecord);
+        }
       }
 
       /* Mark change as approved */
@@ -3408,6 +4017,320 @@
         return true;
       }
       return false;
+    }
+
+    /* =============================================
+       ADMIN MODULE: SEASON MANAGEMENT
+       ============================================= */
+    function createSeasonHistory(cycleType) {
+      const allStudents = sdkLoadAll('students') || [];
+      const housePoints = { Yellow: 0, Red: 0, Green: 0, Blue: 0 };
+      const houseRankings = {};
+      
+      /* Aggregate points by house */
+      allStudents.forEach(s => {
+        if (s.house && s.house in housePoints) {
+          housePoints[s.house] += s.housePoints || 0;
+        }
+      });
+      
+      /* Determine winner */
+      const sortedHouses = Object.entries(housePoints).sort((a, b) => b[1] - a[1]);
+      const winner = sortedHouses[0]?.[0] || 'Unknown';
+      
+      /* Create season snapshot */
+      const season = {
+        _id: uuid(),
+        academicYear: new Date().getFullYear(),
+        cycleType: cycleType,
+        startDate: new Date().toISOString(),
+        endDate: new Date().toISOString(),
+        housePointsSnapshot: housePoints,
+        housePlacements: sortedHouses.map((h, idx) => ({
+          rank: idx + 1,
+          house: h[0],
+          points: h[1]
+        })),
+        winner: winner,
+        totalParticipants: allStudents.length,
+        archivedAt: new Date().toISOString()
+      };
+      
+      sdkSave('seasonHistory', season._id, season);
+      return season;
+    }
+
+    function executeSeasonReset(cycleType) {
+      /* STEP 1: Create and save season archive */
+      const archive = createSeasonHistory(cycleType);
+      
+      /* STEP 2: Reset all students */
+      const allStudents = sdkLoadAll('students') || [];
+      allStudents.forEach(student => {
+        /* Reset house points and XP */
+        student.housePoints = 0;
+        student.xp = 0;
+        student.quizLevelsCompleted = 0;
+        student.gloryPoints = 0;
+        
+        /* If yearly cycle, increment year group */
+        if (cycleType === 'Yearly') {
+          student.yearGroup = (student.yearGroup || 1) + 1;
+          student.yearNumber = student.yearNumber ? student.yearNumber + 1 : 2;
+          
+          /* Move Year 13 to Alumni status */
+          if (student.yearGroup > 13) {
+            student.status = 'Alumni';
+            student.yearGroup = 13;
+            student.yearNumber = 13;
+          }
+        }
+        
+        sdkSave('students', student._id, student);
+      });
+      
+      /* STEP 3: Clear quiz progress (optional - based on your preference) */
+      const allQuizProgress = sdkLoadAll('quizProgress') || [];
+      allQuizProgress.forEach(qp => {
+        if (cycleType === 'Yearly') {
+          sdkDelete('quizProgress', qp._id);
+        } else {
+          qp.resetAt = new Date().toISOString();
+          sdkSave('quizProgress', qp._id, qp);
+        }
+      });
+      
+      /* STEP 4: Send notification to all students */
+      showGlobalNotification('🌟 A new Season has begun! Points have been reset. Good luck!');
+      
+      return archive;
+    }
+
+    function showGlobalNotification(message) {
+      /* Save notification to all students */
+      const allStudents = sdkLoadAll('students') || [];
+      allStudents.forEach(student => {
+        if (!student.globalNotifications) {
+          student.globalNotifications = [];
+        }
+        student.globalNotifications.push({
+          id: uuid(),
+          message: message,
+          timestamp: new Date().toISOString(),
+          read: false
+        });
+        sdkSave('students', student._id, student);
+      });
+      
+      /* Also show toast to current user */
+      showToast(message);
+    }
+
+    function getSeasonHistoryList() {
+      const histories = sdkLoadAll('seasonHistory') || [];
+      return histories.sort((a, b) => new Date(b.archivedAt) - new Date(a.archivedAt));
+    }
+
+    function exportSeasonHistoryToCSV() {
+      const histories = getSeasonHistoryList();
+      if (histories.length === 0) {
+        showToast('No season history to export');
+        return;
+      }
+      
+      let csv = 'Season #,Academic Year,Cycle Type,Start Date,Winner House,Total Participants\n';
+      histories.forEach((h, idx) => {
+        csv += `${idx + 1},${h.academicYear},${h.cycleType},"${new Date(h.startDate).toLocaleDateString()}",${h.winner},${h.totalParticipants}\n`;
+      });
+      
+      /* Download CSV */
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `season-history-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('✓ Season history exported');
+    }
+
+    /* =============================================
+       ADMIN MODULE: USER MANAGEMENT
+       ============================================= */
+    function getFilteredUsers(filters) {
+      let students = sdkLoadAll('students') || [];
+      let teachers = sdkLoadAll('teachers') || [];
+      
+      /* Apply filters */
+      if (filters.role === 'Student') {
+        teachers = [];
+      } else if (filters.role === 'Teacher') {
+        students = [];
+      }
+      
+      /* Filter by search term */
+      if (filters.search) {
+        const search = filters.search.toLowerCase();
+        students = students.filter(s => 
+          `${s.firstName} ${s.familyName}`.toLowerCase().includes(search) ||
+          s.studentId?.toLowerCase().includes(search)
+        );
+        teachers = teachers.filter(t => 
+          `${t.firstName} ${t.familyName}`.toLowerCase().includes(search) ||
+          t.teacherId?.toLowerCase().includes(search)
+        );
+      }
+      
+      /* Filter by year group (students only) */
+      if (filters.yearGroup && !isNaN(filters.yearGroup)) {
+        students = students.filter(s => parseInt(s.yearGroup) === parseInt(filters.yearGroup));
+      }
+      
+      /* Filter by house (students only) */
+      if (filters.house) {
+        students = students.filter(s => s.house === filters.house);
+      }
+      
+      /* Filter by class letter (students only) */
+      if (filters.classLetter) {
+        students = students.filter(s => s.classLetter === filters.classLetter);
+      }
+      
+      return { students, teachers };
+    }
+
+    function deleteStudent(studentId, currentUserId) {
+      /* Safety: cannot delete self */
+      if (studentId === currentUserId) {
+        showToast('❌ Cannot delete your own account');
+        return false;
+      }
+      
+      const student = sdkLoad('students', studentId);
+      if (!student) return false;
+      
+      /* Step 1: Delete house points */
+      const allHousePoints = sdkLoadAll('studentHousePoints') || [];
+      allHousePoints.forEach(hp => {
+        if (hp.studentId === studentId) {
+          sdkDelete('studentHousePoints', hp._id);
+        }
+      });
+      
+      /* Step 2: Delete quiz progress */
+      const allQuizProgress = sdkLoadAll('quizProgress') || [];
+      allQuizProgress.forEach(qp => {
+        if (qp.studentId === studentId) {
+          sdkDelete('quizProgress', qp._id);
+        }
+      });
+      
+      /* Step 3: Delete arena history */
+      const allArenaHistory = sdkLoadAll('arenaHistory') || [];
+      allArenaHistory.forEach(ah => {
+        if (ah.studentId === studentId || ah.opponentId === studentId) {
+          sdkDelete('arenaHistory', ah._id);
+        }
+      });
+      
+      /* Step 4: Delete student record */
+      sdkDelete('students', studentId);
+      
+      return true;
+    }
+
+    function deleteTeacher(teacherId, currentUserId) {
+      /* Safety: cannot delete self */
+      if (teacherId === currentUserId) {
+        showToast('❌ Cannot delete your own account');
+        return false;
+      }
+      
+      const teacher = sdkLoad('teachers', teacherId);
+      if (!teacher) return false;
+      
+      /* Log managed classes for reassignment */
+      let managedClasses = [];
+      const allStudents = sdkLoadAll('students') || [];
+      allStudents.forEach(s => {
+        /* Determine if this teacher managed the student (via some relation - customize based on your logic) */
+        /* For now, log all students in the system */
+      });
+      
+      console.log(`[Deletion] Teacher ${teacher.firstName} ${teacher.familyName} managed students. Please reassign.`);
+      
+      /* Delete teacher record */
+      sdkDelete('teachers', teacherId);
+      
+      return true;
+    }
+
+    function bulkDeleteUsers(userIds, currentUserId, userType = 'student') {
+      const results = { success: [], failed: [] };
+      
+      userIds.forEach(id => {
+        try {
+          if (userType === 'student') {
+            if (deleteStudent(id, currentUserId)) {
+              results.success.push(id);
+            } else {
+              results.failed.push(id);
+            }
+          } else if (userType === 'teacher') {
+            if (deleteTeacher(id, currentUserId)) {
+              results.success.push(id);
+            } else {
+              results.failed.push(id);
+            }
+          }
+        } catch(e) {
+          console.error(`[Deletion Error] ${id}:`, e);
+          results.failed.push(id);
+        }
+      });
+      
+      return results;
+    }
+
+    /* =============================================
+       ADMIN MODULE: ENHANCED ROLE MANAGEMENT
+       ============================================= */
+    function validateSignupCode(code) {
+      return code === 'LEO';
+    }
+
+    function setupInitialHouseTeamManager(teacherId, code) {
+      if (!validateSignupCode(code)) {
+        return { success: false, message: 'Invalid signup code' };
+      }
+      
+      const existingManager = getHouseTeamManager();
+      if (existingManager) {
+        return { success: false, message: 'A House Team Manager already exists' };
+      }
+      
+      setAsHouseTeamManager(teacherId);
+      return { success: true, message: 'You are now the House Team Manager' };
+    }
+
+    function canUserAccessAdminPanel(userId, userType = 'teacher') {
+      if (userType !== 'teacher') return false;
+      const teacher = sdkLoad('teachers', userId);
+      return teacher?.isHouseTeamManager === true;
+    }
+
+    function logAdminAction(adminId, action, details) {
+      const log = {
+        _id: uuid(),
+        adminId: adminId,
+        action: action,
+        details: details,
+        timestamp: new Date().toISOString()
+      };
+      sdkSave('adminActionLogs', log._id, log);
+      console.log('[Admin Action]', log);
     }
 
     /* =============================================
@@ -3612,6 +4535,7 @@
       const familyName = document.getElementById('srFamilyName').value.trim();
       const email = document.getElementById('srEmail').value.trim();
       const studentId = document.getElementById('srStudentId').value.trim();
+      const authId = document.getElementById('srAuthId').value.trim();
       const password = document.getElementById('srPassword').value;
       const confirmPassword = document.getElementById('srConfirmPassword').value;
       const gender = document.querySelector('input[name="srGender"]:checked');
@@ -3624,6 +4548,7 @@
       if (!familyName) { showError('srFamilyNameErr'); valid = false; }
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('srEmailErr'); valid = false; }
       if (!studentId) { showError('srStudentIdErr'); valid = false; }
+      if (!authId) { showError('srAuthIdErr'); valid = false; }
 
       /* Check unique Student ID */
       if (studentId) {
@@ -3642,6 +4567,37 @@
       if (!classGrade) { showError('srClassErr'); valid = false; }
 
       if (!valid) return;
+
+      /* *** GATEKEEPER: Validate Authorized ID *** */
+      const authValidation = await validateAuthorizedId(authId, 'student');
+      if (!authValidation.valid) {
+        /* Show error and option to request authorization */
+        const errorElement = document.getElementById('srAuthIdErr');
+        errorElement.textContent = authValidation.error;
+        errorElement.style.display = 'block';
+        
+        /* Add button to request authorization */
+        const requestBtn = document.createElement('button');
+        requestBtn.type = 'button';
+        requestBtn.className = 'btn btn-secondary';
+        requestBtn.textContent = '📧 Request Authorization';
+        requestBtn.style.marginTop = '8px';
+        requestBtn.style.width = '100%';
+        requestBtn.onclick = () => {
+          sendIdAuthorizationRequest(firstName, familyName, email, authId);
+        };
+        errorElement.parentElement.appendChild(requestBtn);
+        return;
+      }
+      
+      /* Auto-populate name from preset if available (but allow override) */
+      const finalFirstName = firstName || authValidation.presetFirstName || '';
+      const finalLastName = familyName || authValidation.presetLastName || '';
+      
+      if (!finalFirstName || !finalLastName) {
+        showToast('❌ Name is required. Either enter it or use preset from authorized ID.');
+        return;
+      }
 
       /* Parse classGrade using consistent utility */
       const classInfo = parseClassGrade(classGrade);
@@ -3667,10 +4623,11 @@
       /* Save student */
       const id = uuid();
       const studentData = {
-        firstName,
-        familyName,
+        firstName: finalFirstName,
+        familyName: finalLastName,
         email,
         studentId,
+        authorizedId: authId.toUpperCase(),
         password: hashedPassword,
         gender: gender.value,
         school,
@@ -3711,7 +4668,12 @@
         classLetter: studentData.classLetter
       });
 
+      /* Save student */
       sdkSave('students', id, studentData);
+      
+      /* Link the authorized ID to this student account */
+      linkAuthorizedId(authId, 'student', id);
+      
       sendActivationEmail(email, uuid());
       showToast('Account created successfully! ✓');
       saveSession(id, 'student');
@@ -3766,7 +4728,9 @@
       const firstName = document.getElementById('trFirstName').value.trim();
       const familyName = document.getElementById('trFamilyName').value.trim();
       const teacherId = document.getElementById('trTeacherId').value.trim();
+      const authId = document.getElementById('trAuthId').value.trim();
       const email = document.getElementById('trEmail').value.trim();
+      const managerCode = document.getElementById('trManagerCode').value.trim();
       const password = document.getElementById('trPassword').value;
       const confirmPassword = document.getElementById('trConfirmPassword').value;
 
@@ -3774,6 +4738,7 @@
       if (!firstName) { showError('trFirstNameErr'); valid = false; }
       if (!familyName) { showError('trFamilyNameErr'); valid = false; }
       if (!teacherId) { showError('trTeacherIdErr'); valid = false; }
+      if (!authId) { showError('trAuthIdErr'); valid = false; }
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('trEmailErr'); valid = false; }
       if (!password || password.length < 6) { showError('trPasswordErr'); valid = false; }
       if (password !== confirmPassword) { showError('trConfirmPasswordErr'); valid = false; }
@@ -3789,6 +4754,32 @@
 
       if (!valid) return;
 
+      /* *** GATEKEEPER: Validate Authorized ID *** */
+      const authValidation = await validateAuthorizedId(authId, 'teacher');
+      if (!authValidation.valid) {
+        showError('trAuthIdErr', authValidation.error);
+        return;
+      }
+
+      /* Validate manager code if provided */
+      let isManager = false;
+      if (managerCode) {
+        if (!validateSignupCode(managerCode)) {
+          showError('trManagerCodeErr');
+          return;
+        }
+        
+        /* Check if a manager already exists */
+        const existingManager = getHouseTeamManager();
+        if (existingManager) {
+          showError('trManagerCodeErr');
+          showToast('A House Team Manager already exists. Request the role instead.');
+          return;
+        }
+        
+        isManager = true;
+      }
+
       const hashedPassword = await hashPassword(password);
       const id = uuid();
       const teacherData = {
@@ -3796,18 +4787,30 @@
         firstName,
         familyName,
         teacherId,
+        authorizedId: authId.toUpperCase(),
         email,
         password: hashedPassword,
         activated: true,
         createdAt: new Date().toISOString(),
         lastActiveTimestamp: new Date().toISOString(),
-        isHouseTeamManager: false,
+        isHouseTeamManager: isManager,
         managershipRequest: null
       };
 
       sdkSave('teachers', id, teacherData);
+      
+      /* Link the authorized ID to this teacher account */
+      linkAuthorizedId(authId, 'teacher', id);
+      
       sendActivationEmail(email, uuid());
-      showToast('Teacher account created successfully!');
+      
+      if (isManager) {
+        showToast('🎉 You are now the House Team Manager!');
+        logAdminAction(id, 'assigned_house_team_manager', { method: 'signup_code' });
+      } else {
+        showToast('Teacher account created successfully!');
+      }
+      
       saveSession(id, 'teacher');
       showTeacherApp(id);
     });
@@ -3930,6 +4933,18 @@
       renderSportControls();
       renderTeacherApprovals();
       renderWellDone();
+      renderTeacherSettings();
+      
+      /* Show/hide admin features if manager */
+      const teacher = sdkLoad('teachers', teacherId);
+      if (teacher?.isHouseTeamManager) {
+        document.querySelectorAll('.admin-nav-item').forEach(btn => btn.classList.add('visible'));
+        renderSeasonManagementPanel();
+        renderUserManagementPanel();
+        renderIdManagementPanel();
+      } else {
+        document.querySelectorAll('.admin-nav-item').forEach(btn => btn.classList.remove('visible'));
+      }
       
       /* Start periodic activity tracking for teacher */
       if (window.activityInterval) clearInterval(window.activityInterval);
@@ -3949,6 +4964,10 @@
       btn.classList.add('active');
       document.querySelectorAll('.teacher-section').forEach(s => s.classList.remove('active'));
       if (section === 'classOverview') document.getElementById('tSectionClassOverview').classList.add('active');
+      else if (section === 'bulkAssessment') {
+        document.getElementById('tSectionBulkAssessment').classList.add('active');
+        renderBulkAssessmentMatrix();
+      }
       else if (section === 'skillDefs') document.getElementById('tSectionSkillDefs').classList.add('active');
       else if (section === 'sportControls') document.getElementById('tSectionSportControls').classList.add('active');
       else if (section === 'approvals') {
@@ -3956,6 +4975,44 @@
         renderTeacherApprovals();
       }
       else if (section === 'wellDone') document.getElementById('tSectionWellDone').classList.add('active');
+      else if (section === 'settings') {
+        document.getElementById('tSectionSettings').classList.add('active');
+        renderTeacherSettings();
+      }
+      else if (section === 'adminManagement') {
+        document.getElementById('tSectionAdminManagement').classList.add('active');
+        // Set first tab as active by default
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('.admin-tab[data-admin-tab="seasonManagement"]').classList.add('active');
+        document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.remove('active'));
+        document.getElementById('adminTabSeasonManagement').classList.add('active');
+        renderSeasonManagementPanel();
+      }
+    });
+
+    /* =============================================
+       ADMIN TABS HANDLER
+       ============================================= */
+    document.addEventListener('click', function(e) {
+      const tab = e.target.closest('.admin-tab');
+      if (!tab) return;
+      const adminTab = tab.getAttribute('data-admin-tab');
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.remove('active'));
+      
+      if (adminTab === 'seasonManagement') {
+        document.getElementById('adminTabSeasonManagement').classList.add('active');
+        renderSeasonManagementPanel();
+      }
+      else if (adminTab === 'userManagement') {
+        document.getElementById('adminTabUserManagement').classList.add('active');
+        renderUserManagementPanel();
+      }
+      else if (adminTab === 'idManagement') {
+        document.getElementById('adminTabIdManagement').classList.add('active');
+        renderIdManagementPanel();
+      }
     });
 
     /* =============================================
@@ -4046,6 +5103,11 @@
           <option value="hpDesc">HP high → low</option>
           <option value="hpAsc">HP low → high</option>
         </select>
+        <select id="tSortLastConnection">
+          <option value="">Last Connection</option>
+          <option value="mostRecent">⏰ Most Recent</option>
+          <option value="leastRecent">⏰ Least Recent</option>
+        </select>
         <select id="tFilterHouse">
           <option value="">All Houses</option>
           <option value="Yellow">Yellow</option>
@@ -4104,12 +5166,28 @@
         } else if (sortVal === 'hpAsc') {
           filtered = filtered.slice().sort((a, b) => (a.housePoints || 0) - (b.housePoints || 0));
         }
+        
+        const lastConnVal = document.getElementById('tSortLastConnection').value;
+        if (lastConnVal === 'mostRecent') {
+          filtered = filtered.slice().sort((a, b) => {
+            const aTime = a.lastActiveTimestamp ? new Date(a.lastActiveTimestamp).getTime() : 0;
+            const bTime = b.lastActiveTimestamp ? new Date(b.lastActiveTimestamp).getTime() : 0;
+            return bTime - aTime;
+          });
+        } else if (lastConnVal === 'leastRecent') {
+          filtered = filtered.slice().sort((a, b) => {
+            const aTime = a.lastActiveTimestamp ? new Date(a.lastActiveTimestamp).getTime() : 0;
+            const bTime = b.lastActiveTimestamp ? new Date(b.lastActiveTimestamp).getTime() : 0;
+            return aTime - bTime;
+          });
+        }
         renderStudentList(filtered, pendingStudentIds);
       };
 
       document.getElementById('tFilterYear').addEventListener('change', applyFilters);
       document.getElementById('tFilterClass').addEventListener('change', applyFilters);
       document.getElementById('tSortHP').addEventListener('change', applyFilters);
+      document.getElementById('tSortLastConnection').addEventListener('change', applyFilters);
       document.getElementById('tFilterHouse').addEventListener('change', applyFilters);
       document.getElementById('tFilterGender').addEventListener('change', applyFilters);
       document.getElementById('tFilterSearch').addEventListener('input', applyFilters);
@@ -4141,11 +5219,27 @@
         const hp = s.housePoints || 0;
         const lessons = s.lessonsDone || 0;
         const isPending = pendingStudentIds && pendingStudentIds.has(s._id);
+        
+        /* Last Connection tracking */
+        let lastConnDisplay = 'Never logged in';
+        let isInactive = false;
+        if (s.lastActiveTimestamp) {
+          lastConnDisplay = getRelativeTime(s.lastActiveTimestamp);
+          /* Check if inactive (7+ days) */
+          const lastTime = new Date(s.lastActiveTimestamp);
+          const now = new Date();
+          const daysDiff = (now - lastTime) / (1000 * 60 * 60 * 24);
+          isInactive = daysDiff >= 7;
+        }
+        
+        const lastConnStyle = isInactive ? 'color: var(--error, #ff4444); font-weight: 600;' : '';
+        
         return `<div class="student-list-item" data-student-id="${s._id}">
           <img class="student-photo" src="${photo}" alt="${fullName}">
           <div class="student-info">
             <div class="student-name">${fullName}</div>
             <div class="student-meta">${s.classGrade || ''} · <span style="color:${getHouseColor(s.house)}">${s.house}</span> · ${hp} HP · ${lessons} lessons</div>
+            <div class="student-last-connection" style="${lastConnStyle}">🕐 Last active: ${lastConnDisplay}</div>
           </div>
           ${isPending ? '<span class="pending-tag">Pending</span>' : ''}
         </div>`;
@@ -4201,7 +5295,7 @@
         </div>`;
 
       /* Assessment History - collapsible per sport */
-      html += '<h4 style="margin-bottom:8px;color:var(--text);">Assessment History</h4>';
+      html += '<h4 style="margin-bottom:8px;color:var(--text);">Assessment History & Lesson Progress</h4>';
       const attemptedSports = SPORTS_LIST.filter(s => sp[s.key]);
       if (attemptedSports.length === 0) {
         html += '<p style="color:var(--text-2);font-size:0.85rem;margin-bottom:16px;">No sports attempted yet.</p>';
@@ -4211,10 +5305,29 @@
           const selfAssessment = sdkLoad('assessments', compositeId);
           const teacherCompositeId = `${studentId}_${sport.key}_teacher`;
           const teacherAssessment = sdkLoad('assessments', teacherCompositeId);
-          html += `<div class="collapsible-header" data-collapse="${sport.key}">${sport.emoji} ${sport.name} <span>▼</span></div>`;
+          const sportProgress = sp[sport.key] || {};
+          const lessonsCompleted = sportProgress.lessonsCompleted || [];
+          const lessonData = sportProgress.lessonData || [];
+          
+          html += `<div class="collapsible-header" data-collapse="${sport.key}">${sport.emoji} ${sport.name} <span style="color:var(--text-2);font-size:0.8rem;font-weight:400;">（${lessonsCompleted.length}/10 lessons）</span> <span>▼</span></div>`;
           html += `<div class="collapsible-body" id="collapse_${sport.key}">`;
+          
+          /* Show practice lesson topics */
+          const customTopicLessons = [2, 3, 4, 6, 7, 8];
+          const practicsWithTopics = lessonData.filter(ld => customTopicLessons.includes(ld.lessonNum) && ld.topic);
+          if (practicsWithTopics.length > 0) {
+            html += '<p style="font-weight:600;font-size:0.8rem;margin:4px 0;">📝 Lesson Topics:</p>';
+            practicsWithTopics.forEach(lesson => {
+              let displayTopic = lesson.topic;
+              if (displayTopic.length > 35) {
+                displayTopic = displayTopic.substring(0, 32) + '...';
+              }
+              html += `<div class="custom-lesson-info">Lesson ${lesson.lessonNum}: <strong>${displayTopic}</strong></div>`;
+            });
+          }
+          
           if (selfAssessment) {
-            html += '<p style="font-weight:600;font-size:0.8rem;margin:4px 0;">Self-Assessment:</p>';
+            html += '<p style="font-weight:600;font-size:0.8rem;margin:4px 0;margin-top:8px;">Self-Assessment:</p>';
             html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">';
             (selfAssessment.skills || []).forEach(sk => {
               html += `<span style="background:var(--surface-2);padding:4px 10px;border-radius:6px;font-size:0.8rem;">${sk.skillName}: Level ${sk.level}</span>`;
@@ -4411,6 +5524,7 @@
 
         /* 2-4. Award HP */
         const freshStudent = sdkLoad('students', studentId);
+        const oldRank = checkRankImprovement(studentId, Infinity); // Get current rank before awarding
         freshStudent.housePoints = (freshStudent.housePoints || 0) + totalPoints;
         sdkSave('housePointEvents', uuid(), {
           studentId: studentId,
@@ -4420,6 +5534,9 @@
           date: new Date().toISOString()
         });
         sdkSave('students', freshStudent._id || studentId, freshStudent);
+        
+        /* Check for rank improvement */
+        checkRankImprovement(studentId, oldRank);
 
         /* 5. Mark related notifications as read */
         const allNotifs = sdkLoadAll('teacherNotifications') || [];
@@ -5003,6 +6120,7 @@
 
         targetStudents.forEach(s => {
           const sid = s._id || s.id;
+          const oldRank = checkRankImprovement(sid, Infinity); // Get current rank before awarding
           s.housePoints = (s.housePoints || 0) + points;
           sdkSave('students', sid, s);
           sdkSave('housePointEvents', uuid(), {
@@ -5012,6 +6130,8 @@
             note: reason,
             date: new Date().toISOString()
           });
+          /* Check for rank improvement */
+          checkRankImprovement(sid, oldRank);
           /* Log the well done action */
           sdkSave('wellDoneLogs', uuid(), {
             teacherId: currentTeacherId,
@@ -5032,6 +6152,940 @@
         /* Reset form */
         document.getElementById('wdPoints').value = '5';
         document.getElementById('wdReason').value = '';
+      });
+    }
+
+    /* =============================================
+       TEACHER SETTINGS PANEL
+       ============================================= */
+    function renderTeacherSettings() {
+      const container = document.getElementById('tSectionSettings');
+      const currentTeacher = sdkLoad('teachers', currentTeacherId);
+      
+      if (!currentTeacher) {
+        container.innerHTML = '<p style="color:var(--text-2);">Unable to load teacher data.</p>';
+        return;
+      }
+      
+      const isManager = currentTeacher.isHouseTeamManager;
+      const managerName = isManager ? 'You are the House Team Manager' : 'Not assigned';
+      
+      let html = `<div style="max-width:600px;">
+        <h2 style="color:var(--text);margin-bottom:20px;">⚙️ Teacher Settings</h2>
+        
+        <div class="card" style="margin-bottom:20px;">
+          <h3 style="color:var(--text);margin-bottom:12px;font-size:1.1rem;">👤 Account Information</h3>
+          <p style="margin:8px 0;color:var(--text-2);">
+            <strong style="color:var(--text);">Name:</strong> ${currentTeacher.title} ${currentTeacher.firstName} ${currentTeacher.familyName}
+          </p>
+          <p style="margin:8px 0;color:var(--text-2);">
+            <strong style="color:var(--text);">Teacher ID:</strong> ${currentTeacher.teacherId}
+          </p>
+          <p style="margin:8px 0;color:var(--text-2);">
+            <strong style="color:var(--text);">Email:</strong> ${currentTeacher.email}
+          </p>
+          <p style="margin:8px 0;color:var(--text-2);">
+            <strong style="color:var(--text);">Role:</strong> 
+            <span style="background:${isManager ? 'var(--theme-accent-reward)' : 'var(--border)'};color:${isManager ? '#000' : 'var(--text-2)'};padding:4px 8px;border-radius:4px;font-weight:600;">
+              ${isManager ? '👑 House Team Manager' : '👨‍🏫 Teacher'}
+            </span>
+          </p>
+          <p style="margin:8px 0;color:var(--text-2);">
+            <strong style="color:var(--text);">Created:</strong> ${new Date(currentTeacher.createdAt).toLocaleDateString()}
+          </p>
+        </div>
+        
+        <div class="card" style="margin-bottom:20px;">
+          <h3 style="color:var(--text);margin-bottom:12px;font-size:1.1rem;">🔐 Authorized ID</h3>
+          
+          ${currentTeacher.authorizedId ? `
+            <div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid var(--accent);">
+              <div style="font-weight:600;color:var(--accent);font-size:1.1rem;">${currentTeacher.authorizedId}</div>
+              <div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">✅ Your account is authorized and active</div>
+            </div>
+          ` : `
+            <div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid #ff4444;">
+              <div style="color:#ff4444;font-weight:600;">⚠️ No Authorized ID linked</div>
+              <div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">Contact your House Team Manager to get an authorized ID</div>
+            </div>
+          `}
+        </div>
+        
+        <div class="card" style="margin-bottom:20px;">
+          <h3 style="color:var(--text);margin-bottom:12px;font-size:1.1rem;">🔐 Become House Team Manager</h3>
+          
+          ${isManager ? `
+            <div style="background:var(--theme-accent-reward);color:#000;padding:12px;border-radius:8px;margin-bottom:16px;font-weight:600;">
+              ✅ You are currently the House Team Manager!
+            </div>
+          ` : `
+            <p style="color:var(--text-2);margin-bottom:12px;">
+              Enter the House Team Manager signup code to unlock admin features including Season Management and User Administration.
+            </p>
+            
+            <div class="form-group">
+              <label for="managerCodeInput">Manager SignUp Code</label>
+              <input type="text" id="managerCodeInput" class="form-input" placeholder="Enter code..." style="text-transform:uppercase;">
+              <div class="form-error" id="managerCodeInputErr" style="margin-top:4px;">Invalid or already assigned manager code.</div>
+            </div>
+            
+            <button class="btn btn-primary" id="applyManagerCodeBtn" style="min-height:48px;width:100%;">Become House Team Manager</button>
+            
+            <div style="background:var(--surface-2);padding:12px;border-radius:8px;margin-top:12px;font-size:0.85rem;color:var(--text-2);">
+              <strong style="color:var(--text);">Hint:</strong> The code is provided by your school administration.
+            </div>
+          `}
+        </div>
+        
+        <div class="card">
+          <h3 style="color:var(--text);margin-bottom:12px;font-size:1.1rem;">📊 Admin Permissions</h3>
+          <div style="display:grid;gap:8px;">
+            <div style="padding:10px;border-radius:6px;background:${isManager ? 'var(--theme-accent-reward)' : 'var(--surface-2)'};border-left:4px solid ${isManager ? 'var(--theme-accent-reward)' : 'var(--border)'};">
+              <span style="color:${isManager ? '#000' : 'var(--text-2)'};font-weight:500;">📅 Season Management</span>
+              <p style="font-size:0.8rem;color:${isManager ? '#000' : 'var(--text-2)'};margin-top:2px;">Reset competitive data, archive seasons</p>
+            </div>
+            <div style="padding:10px;border-radius:6px;background:${isManager ? 'var(--theme-accent-reward)' : 'var(--surface-2)'};border-left:4px solid ${isManager ? 'var(--theme-accent-reward)' : 'var(--border)'};">
+              <span style="color:${isManager ? '#000' : 'var(--text-2)'};font-weight:500;">👥 User Management</span>
+              <p style="font-size:0.8rem;color:${isManager ? '#000' : 'var(--text-2)'};margin-top:2px;">Delete users, manage accounts in bulk</p>
+            </div>
+          </div>
+        </div>
+      </div>`;
+      
+      container.innerHTML = html;
+      
+      /* Only setup handler if not already manager */
+      if (!isManager) {
+        const applyBtn = document.getElementById('applyManagerCodeBtn');
+        const codeInput = document.getElementById('managerCodeInput');
+        const errorMsg = document.getElementById('managerCodeInputErr');
+        
+        codeInput.addEventListener('input', function() {
+          errorMsg.style.display = 'none';
+        });
+        
+        applyBtn.addEventListener('click', function() {
+          const code = codeInput.value.trim().toUpperCase();
+          
+          if (!code) {
+            errorMsg.textContent = 'Please enter the code.';
+            errorMsg.style.display = 'block';
+            return;
+          }
+          
+          /* Validate code */
+          if (!validateSignupCode(code)) {
+            errorMsg.textContent = 'Invalid manager code.';
+            errorMsg.style.display = 'block';
+            return;
+          }
+          
+          /* Check if manager already exists */
+          const existingManager = getHouseTeamManager();
+          if (existingManager) {
+            errorMsg.textContent = 'A House Team Manager already exists.';
+            errorMsg.style.display = 'block';
+            return;
+          }
+          
+          /* Assign role */
+          setAsHouseTeamManager(currentTeacherId);
+          showToast('🎉 You are now the House Team Manager!');
+          logAdminAction(currentTeacherId, 'assigned_house_team_manager', { method: 'teacher_app_code' });
+          
+          /* Refresh UI */
+          renderTeacherSettings();
+          showTeacherApp(currentTeacherId);
+        });
+      }
+    }
+
+    /* =============================================
+       BULK ASSESSMENT MATRIX
+       ============================================= */
+    function renderBulkAssessmentMatrix() {
+      const container = document.getElementById('tSectionBulkAssessment');
+      
+      let html = `<div style="max-width:1400px;">
+        <h2 style="color:var(--text);margin-bottom:20px;">📊 Bulk Assessment Matrix (Lesson 10)</h2>
+        
+        <div class="filter-bar">
+          <select id="baFilterYear">
+            <option value="">Select Year Group</option>`;
+      for (let y = 1; y <= 13; y++) html += `<option value="${y}">Year ${y}</option>`;
+      html += `</select>
+          <select id="baFilterClass">
+            <option value="">Select Class Letter</option>
+            <option value="C">C</option>
+            <option value="H">H</option>
+            <option value="I">I</option>
+            <option value="S">S</option>
+            <option value="J">J</option>
+            <option value="B">B</option>
+          </select>
+          <select id="baSportSelect">
+            <option value="">Select Sport</option>`;
+      SPORTS_LIST.forEach(s => html += `<option value="${s.key}">${s.emoji} ${s.name}</option>`);
+      html += `</select>
+        </div>
+        
+        <div id="baMatrixContainer" style="margin-top:20px;"></div>
+      </div>`;
+      
+      container.innerHTML = html;
+      
+      document.getElementById('baFilterYear').addEventListener('change', () => applyBulkAssessmentFilters());
+      document.getElementById('baFilterClass').addEventListener('change', () => applyBulkAssessmentFilters());
+      document.getElementById('baSportSelect').addEventListener('change', () => applyBulkAssessmentFilters());
+    }
+
+    function applyBulkAssessmentFilters() {
+      const year = document.getElementById('baFilterYear').value;
+      const classLetter = document.getElementById('baFilterClass').value;
+      const sportKey = document.getElementById('baSportSelect').value;
+      const matrixContainer = document.getElementById('baMatrixContainer');
+      
+      if (!year || !classLetter || !sportKey) {
+        matrixContainer.innerHTML = '<p style="color:var(--text-2);text-align:center;padding:40px 20px;">Please select Year Group, Class Letter, and Sport to begin.</p>';
+        return;
+      }
+      
+      /* Get students for this class */
+      const allStudents = sdkLoadAll('students') || [];
+      const classGrade = `Year ${year} ${classLetter}`;
+      const students = allStudents.filter(s => s.classGrade === classGrade);
+      
+      if (students.length === 0) {
+        matrixContainer.innerHTML = '<p style="color:var(--text-2);text-align:center;padding:40px 20px;">No students found in this class.</p>';
+        return;
+      }
+      
+      /* Get skill definitions - calculate keystage from selected year */
+      const keystage = getKeyStage(year);
+      const defKey = `${keystage}_${sportKey}`;
+      const skillDef = sdkLoad('skillDefinitions', defKey);
+      
+      if (!skillDef || !skillDef.motor1) {
+        matrixContainer.innerHTML = `<p style="color:var(--text-2);text-align:center;padding:40px 20px;">No skill definitions found for <strong>${keystage}</strong> / <strong>${sportKey}</strong>. Please set up skills in Skill Definitions first.</p>`;
+        return;
+      }
+      
+      /* Transform skill definitions from slot-based to array-based format */
+      const SKILL_SLOTS = ['motor1', 'motor2', 'motor3', 'methodological', 'social'];
+      const skills = SKILL_SLOTS.map(slot => ({
+        _id: slot,
+        name: skillDef[slot]?.name || slot,
+        slot: slot,
+        levels: ['1', '2', '3', '4'],
+        descriptions: [
+          skillDef[slot]?.['level1'] || '',
+          skillDef[slot]?.['level2'] || '',
+          skillDef[slot]?.['level3'] || '',
+          skillDef[slot]?.['level4'] || ''
+        ]
+      })).filter(s => s.name && s.name.trim() !== '');
+      const sport = SPORTS_LIST.find(s => s.key === sportKey);
+      const colors = ['#ff4444', '#ffb700', '#90ee90', '#228b22']; /* Red, Yellow, Light Green, Deep Green */
+      
+      let html = `<div style="overflow-x:auto;">
+        <table class="bulk-assessment-table">
+          <thead>
+            <tr>
+              <th class="student-col">Student Name</th>`;
+      
+      skills.forEach(skill => {
+        html += `<th class="skill-col">
+          <div class="skill-header">
+            <div class="skill-name">${skill.name}</div>
+            <button class="btn btn-sm" id="setAllBtn_${skill._id}" style="margin-top:6px;padding:4px 8px;font-size:0.75rem;">Set All</button>
+          </div>
+        </th>`;
+      });
+      
+      html += `</tr>
+          </thead>
+          <tbody id="baMatrixBody">`;
+      
+      /* Add student rows */
+      students.forEach(student => {
+        html += `<tr data-student-id="${student._id}">
+          <td class="student-col"><strong>${student.firstName} ${student.familyName}</strong></td>`;
+        
+        skills.forEach(skill => {
+          /* Get existing assessment level */
+          const compositeId = `${student._id}_${sportKey}_teacher`;
+          const assessment = sdkLoad('assessments', compositeId);
+          const existingLevel = assessment?.skills?.find(s => s.name === skill.name)?.level || 0;
+          
+          html += `<td class="skill-cell">
+            <div class="level-selector" data-student-id="${student._id}" data-skill-name="${skill.name}" data-sport-key="${sportKey}">`;
+          
+          /* 4-level buttons with color coding */
+          const colors = ['#ff4444', '#ffb700', '#90ee90', '#228b22']; /* Red, Yellow, Light Green, Deep Green */
+          const labels = ['1', '2', '3', '4'];
+          const levelNames = ['Beginner', 'Explorer', 'Performer', 'Champion'];
+          
+          labels.forEach((label, idx) => {
+            const level = idx + 1;
+            const isActive = existingLevel === level;
+            const color = colors[idx];
+            const bgColor = isActive ? color : 'var(--surface-2)';
+            const textColor = isActive ? '#fff' : 'var(--text)';
+            
+            html += `<button class="level-btn" data-level="${level}" style="background:${bgColor};color:${textColor};border:2px solid ${color};flex:1;padding:8px;border-radius:6px;font-weight:${isActive ? '700' : '500'};cursor:pointer;transition:0.2s;" title="${levelNames[idx]}">
+              ${label}
+            </button>`;
+          });
+          
+          html += `</div>
+          </td>`;
+        });
+        
+        html += `</tr>`;
+      });
+      
+      html += `</tbody>
+        </table>
+      </div>
+      
+      <div style="margin-top:20px;padding:16px;background:var(--surface-2);border-radius:8px;">
+        <p style="color:var(--text-2);margin-bottom:12px;">
+          <strong style="color:var(--text);">💡 Running Total:</strong> <span id="hpTotalPreview">0 HP</span> to be awarded
+        </p>
+        <button class="btn btn-primary" id="submitBulkBtn" style="min-height:48px;padding:12px 24px;font-weight:600;">
+          ✅ Submit Assessments & Update House Points
+        </button>
+      </div>`;
+      
+      matrixContainer.innerHTML = html;
+      
+      /* Setup level button handlers */
+      document.querySelectorAll('.level-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const level = parseInt(this.getAttribute('data-level'));
+          const selector = this.closest('.level-selector');
+          const studentId = selector.getAttribute('data-student-id');
+          const skillName = selector.getAttribute('data-skill-name');
+          const sportKey = selector.getAttribute('data-sport-key');
+          
+          /* Update UI */
+          selector.querySelectorAll('.level-btn').forEach((b, idx) => {
+            const lvl = idx + 1;
+            const color = colors[idx];
+            if (lvl === level) {
+              b.style.background = color;
+              b.style.color = '#fff';
+              b.style.fontWeight = '700';
+            } else {
+              b.style.background = 'var(--surface-2)';
+              b.style.color = 'var(--text)';
+              b.style.fontWeight = '500';
+            }
+          });
+          
+          /* Real-time save */
+          saveBulkAssessmentLevel(studentId, sportKey, skillName, level);
+          updateHPPreview();
+        });
+      });
+      
+        skills.forEach(skill => {
+        const setAllBtn = document.getElementById(`setAllBtn_${skill._id}`);
+        if (setAllBtn) {
+          setAllBtn.addEventListener('click', function() {
+            /* Prompt teacher for level */
+            const levelStr = prompt('Set all students to level (1-4):');
+            if (!levelStr) return;
+            const level = parseInt(levelStr);
+            if (isNaN(level) || level < 1 || level > 4) {
+              showToast('❌ Invalid level. Use 1-4.');
+              return;
+            }
+            
+            /* Apply to all students */
+            document.querySelectorAll(`[data-skill-name="${skill.name}"]`).forEach(selector => {
+              const studentId = selector.getAttribute('data-student-id');
+              const buttons = selector.querySelectorAll('.level-btn');
+              buttons.forEach((btn, idx) => {
+                const lvl = idx + 1;
+                const color = colors[idx];
+                if (lvl === level) {
+                  btn.style.background = color;
+                  btn.style.color = '#fff';
+                  btn.style.fontWeight = '700';
+                } else {
+                  btn.style.background = 'var(--surface-2)';
+                  btn.style.color = 'var(--text)';
+                  btn.style.fontWeight = '500';
+                }
+              });
+              /* Save each student */
+              saveBulkAssessmentLevel(studentId, sportKey, skill.name, level, skill);
+            });
+            
+            updateHPPreview();
+            showToast(`✅ Set all students to Level ${level}`);
+          });
+        }
+      });
+      
+      /* Submit button */
+      document.getElementById('submitBulkBtn').addEventListener('click', function() {
+        showToast('✅ All assessments saved with real-time updates!');
+      });
+      
+      /* Helper to update HP preview */
+      function updateHPPreview() {
+        let totalHP = 0;
+        document.querySelectorAll('.level-selector').forEach(selector => {
+          const activeBtn = selector.querySelector('.level-btn[style*="color: rgb(255, 255, 255)"], .level-btn[style*="color: #fff"]');
+          if (activeBtn) {
+            const level = parseInt(activeBtn.getAttribute('data-level'));
+            totalHP += level;
+          }
+        });
+        document.getElementById('hpTotalPreview').textContent = `${totalHP} HP`;
+      }
+      
+      updateHPPreview();
+    }
+
+    function saveBulkAssessmentLevel(studentId, sportKey, skillName, level) {
+      const student = sdkLoad('students', studentId);
+      if (!student) return;
+      
+      const sport = SPORTS_LIST.find(s => s.key === sportKey);
+      if (!sport) return;
+      
+      /* Composite ID for teacher assessment */
+      const compositeId = `${studentId}_${sportKey}_teacher`;
+      let assessment = sdkLoad('assessments', compositeId) || {
+        _id: compositeId,
+        studentId: studentId,
+        sportKey: sportKey,
+        lessonNum: 10,
+        source: 'teacher',
+        skills: [],
+        submittedAt: new Date().toISOString()
+      };
+      
+      /* Get previous HP value for this sport assessment */
+      const previousTotal = assessment.skills.reduce((sum, s) => sum + (s.level || 0), 0);
+      
+      /* Update or add skill */
+      const existingSkillIdx = assessment.skills.findIndex(s => s.name === skillName);
+      if (existingSkillIdx >= 0) {
+        assessment.skills[existingSkillIdx].level = level;
+      } else {
+        assessment.skills.push({
+          name: skillName,
+          level: level,
+          skillName: skillName
+        });
+      }
+      
+      /* Save assessment */
+      sdkSave('assessments', compositeId, assessment);
+      
+      /* Calculate new total HP for this assessment */
+      const newTotal = assessment.skills.reduce((sum, s) => sum + (s.level || 0), 0);
+      const hpDifference = newTotal - previousTotal;
+      
+      /* Update student house points by difference only */
+      if (hpDifference !== 0) {
+        student.housePoints = (student.housePoints || 0) + hpDifference;
+        sdkSave('students', studentId, student);
+      }
+    }
+
+    /* =============================================
+       ADMIN RENDER: SEASON MANAGEMENT
+       ============================================= */
+    function renderSeasonManagementPanel() {
+      const container = document.getElementById('adminTabSeasonManagement');
+      const currentTeacher = sdkLoad('teachers', currentTeacherId);
+      
+      if (!currentTeacher || !currentTeacher.isHouseTeamManager) {
+        container.innerHTML = '<p style="color:var(--text-2);">Access denied.</p>';
+        return;
+      }
+      
+      const allStudents = sdkLoadAll('students') || [];
+      const histories = getSeasonHistoryList();
+      
+      /* Calculate current house standings */
+      const housePoints = { Yellow: 0, Red: 0, Green: 0, Blue: 0 };
+      allStudents.forEach(s => {
+        if (s.house && s.house in housePoints) {
+          housePoints[s.house] += s.housePoints || 0;
+        }
+      });
+      
+      const standings = Object.entries(housePoints)
+        .sort((a, b) => b[1] - a[1])
+        .map((h, idx) => `${idx + 1}. ${h[0]}: ${h[1]} points`);
+      
+      let html = `<div class="admin-panel">
+        <h3 style="margin-bottom:20px;">📅 Season Management & Reset</h3>
+        
+        <div class="season-info-box">
+          <p><strong>Current Season Data:</strong></p>
+          <p>📊 Total Students: ${allStudents.length}</p>
+          <p>🏆 Current Standings:</p>
+          <div style="margin-left:16px;">
+            ${standings.map(s => `<p style="margin:4px 0;">${s}</p>`).join('')}
+          </div>
+        </div>
+        
+        <div class="admin-controls">
+          <div class="form-group">
+            <label>Season Cycle Type</label>
+            <select id="seasonCycleType" class="form-select">
+              <option value="Semester">Semester (every 6 months)</option>
+              <option value="Trimester">Trimester (every 4 months)</option>
+              <option value="Yearly">Yearly (every 12 months)</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Reset Date</label>
+            <input type="date" id="seasonResetDate" class="form-input">
+          </div>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+          <button class="btn btn-primary" id="scheduleResetBtn" style="min-height:48px;">⏰ Schedule Reset</button>
+          <button class="btn admin-danger" id="manualResetBtn" style="min-height:48px;">🔄 Execute Reset Now</button>
+        </div>
+        
+        <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:20px;">
+          <h4 style="margin-bottom:12px;">📋 Season History (${histories.length})</h4>
+          ${histories.length === 0 ? 
+            '<p style="color:var(--text-2);">No season history yet.</p>' :
+            `
+            <table class="admin-table">
+              <thead>
+                <tr style="background:var(--surface-2);">
+                  <th>Season #</th>
+                  <th>Year</th>
+                  <th>Type</th>
+                  <th>Winner</th>
+                  <th>Participants</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${histories.map((h, idx) => `
+                  <tr>
+                    <td>${idx + 1}</td>
+                    <td>${h.academicYear}</td>
+                    <td>${h.cycleType}</td>
+                    <td><strong>${h.winner}</strong></td>
+                    <td>${h.totalParticipants}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <button class="btn btn-secondary" id="exportSeasonHistoryBtn" style="margin-top:12px;">📥 Export Season History (CSV)</button>
+            `
+          }
+        </div>
+      </div>`;
+      
+      container.innerHTML = html;
+      
+      /* Set today as default reset date */
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('seasonResetDate').value = today;
+      
+      /* Schedule Reset */
+      document.getElementById('scheduleResetBtn').addEventListener('click', function() {
+        const cycleType = document.getElementById('seasonCycleType').value;
+        const resetDate = document.getElementById('seasonResetDate').value;
+        if (!resetDate) { showToast('Please select a reset date'); return; }
+        
+        showToast(`✓ Reset scheduled for ${resetDate} (${cycleType})`);
+        logAdminAction(currentTeacherId, 'schedule_season_reset', { cycleType, resetDate });
+      });
+      
+      /* Manual Reset */
+      document.getElementById('manualResetBtn').addEventListener('click', function() {
+        const cycleType = document.getElementById('seasonCycleType').value;
+        showSeasonResetConfirmationModal(cycleType);
+      });
+      
+      /* Export Button */
+      const exportBtn = document.getElementById('exportSeasonHistoryBtn');
+      if (exportBtn) {
+        exportBtn.addEventListener('click', exportSeasonHistoryToCSV);
+      }
+    }
+
+    /* =============================================
+       ADMIN RENDER: USER MANAGEMENT
+       ============================================= */
+    function renderUserManagementPanel() {
+      const container = document.getElementById('adminTabUserManagement');
+      const currentTeacher = sdkLoad('teachers', currentTeacherId);
+      
+      if (!currentTeacher || !currentTeacher.isHouseTeamManager) {
+        container.innerHTML = '<p style="color:var(--text-2);">Access denied.</p>';
+        return;
+      }
+      
+      const filteredUsers = getFilteredUsers({});
+      const allStudents = filteredUsers.students;
+      const allTeachers = filteredUsers.teachers;
+      
+      let html = `<div class="admin-panel">
+        <h3 style="margin-bottom:20px;">👥 User Management & Bulk Operations</h3>
+        
+        <div class="admin-filters">
+          <div class="form-group">
+            <label>Search</label>
+            <input type="text" id="umSearchInput" class="form-input" placeholder="Name or ID...">
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <select id="umRoleFilter" class="form-select">
+              <option value="">All Roles</option>
+              <option value="Student">Student</option>
+              <option value="Teacher">Teacher</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Year Group</label>
+            <select id="umYearFilter" class="form-select">
+              <option value="">All Years</option>
+              ${Array.from({length:13}, (_, i) => `<option value="${i+1}">Year ${i+1}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>House Team</label>
+            <select id="umHouseFilter" class="form-select">
+              <option value="">All Houses</option>
+              <option value="Yellow">Yellow</option>
+              <option value="Red">Red</option>
+              <option value="Green">Green</option>
+              <option value="Blue">Blue</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Class Letter</label>
+            <select id="umClassFilter" class="form-select">
+              <option value="">All Classes</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="H">H</option>
+              <option value="I">I</option>
+              <option value="J">J</option>
+              <option value="S">S</option>
+            </select>
+          </div>
+        </div>
+        
+        <div style="margin-bottom:16px;padding:12px;background:var(--surface-2);border-radius:8px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <input type="checkbox" id="umSelectAll" style="accent-color:var(--accent);cursor:pointer;"> 
+            <label for="umSelectAll" style="cursor:pointer;">Select All</label>
+          </div>
+          <button class="btn admin-danger" id="umDeleteBtn" style="opacity:0.5;cursor:not-allowed;" disabled>
+            🗑️ Delete Selected (<span id="umSelectionCount">0</span>)
+          </button>
+        </div>
+        
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="umTableSelectAll" style="accent-color:var(--accent);"></th>
+              <th>Name</th>
+              <th>ID</th>
+              <th>Role</th>
+              <th>Year/Group</th>
+              <th>House</th>
+            </tr>
+          </thead>
+          <tbody id="umTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>`;
+      
+      container.innerHTML = html;
+      renderUserManagementTable(allStudents, allTeachers);
+      setupUserManagementHandlers(currentTeacherId);
+    }
+
+    function renderUserManagementTable(students, teachers) {
+      const tbody = document.getElementById('umTableBody');
+      let html = '';
+      
+      /* Add students */
+      students.forEach(s => {
+        html += `<tr data-userId="${s._id}" data-userType="student">
+          <td><input type="checkbox" class="um-row-checkbox" data-userId="${s._id}" style="accent-color:var(--accent);"></td>
+          <td>${s.firstName} ${s.familyName}</td>
+          <td>${s.studentId || '-'}</td>
+          <td>Student</td>
+          <td>Year ${s.yearGroup || '-'}</td>
+          <td>${s.house || '-'}</td>
+        </tr>`;
+      });
+      
+      /* Add teachers */
+      teachers.forEach(t => {
+        html += `<tr data-userId="${t._id}" data-userType="teacher">
+          <td><input type="checkbox" class="um-row-checkbox" data-userId="${t._id}" style="accent-color:var(--accent);"></td>
+          <td>${t.firstName} ${t.familyName}</td>
+          <td>${t.teacherId || '-'}</td>
+          <td>Teacher${t.isHouseTeamManager ? ' (Manager)' : ''}</td>
+          <td>-</td>
+          <td>-</td>
+        </tr>`;
+      });
+      
+      if (html === '') {
+        html = '<tr><td colspan="6" style="text-align:center;color:var(--text-2);">No users found</td></tr>';
+      }
+      
+      tbody.innerHTML = html;
+    }
+
+    function setupUserManagementHandlers(currentUserId) {
+      const selectAllCheckbox = document.getElementById('umSelectAll');
+      const tableSelectAllCheckbox = document.getElementById('umTableSelectAll');
+      const deleteBtn = document.getElementById('umDeleteBtn');
+      const selectionCountLabel = document.getElementById('umSelectionCount');
+      
+      const searchInput = document.getElementById('umSearchInput');
+      const roleFilter = document.getElementById('umRoleFilter');
+      const yearFilter = document.getElementById('umYearFilter');
+      const houseFilter = document.getElementById('umHouseFilter');
+      const classFilter = document.getElementById('umClassFilter');
+      
+      /* Get all row checkboxes */
+      function getRowCheckboxes() {
+        return Array.from(document.querySelectorAll('.um-row-checkbox'));
+      }
+      
+      /* Apply filters to table */
+      function updateTableWithFilters() {
+        const filters = {
+          search: searchInput.value,
+          role: roleFilter.value,
+          yearGroup: yearFilter.value,
+          house: houseFilter.value,
+          classLetter: classFilter.value
+        };
+        
+        const filteredUsers = getFilteredUsers(filters);
+        renderUserManagementTable(filteredUsers.students, filteredUsers.teachers);
+        setupUserManagementHandlers(currentUserId);
+      }
+      
+      function updateSelectionState() {
+        const checkboxes = getRowCheckboxes();
+        const selected = checkboxes.filter(cb => cb.checked).length;
+        selectionCountLabel.textContent = selected;
+        
+        if (selected > 0) {
+          deleteBtn.disabled = false;
+          deleteBtn.style.opacity = '1';
+          deleteBtn.style.cursor = 'pointer';
+        } else {
+          deleteBtn.disabled = true;
+          deleteBtn.style.opacity = '0.5';
+          deleteBtn.style.cursor = 'not-allowed';
+        }
+        
+        /* Update "Select All" checkbox */
+        selectAllCheckbox.checked = selected > 0 && selected === checkboxes.length;
+        tableSelectAllCheckbox.checked = selectAllCheckbox.checked;
+      }
+      
+      /* Filter inputs */
+      searchInput.addEventListener('input', updateTableWithFilters);
+      roleFilter.addEventListener('change', updateTableWithFilters);
+      yearFilter.addEventListener('change', updateTableWithFilters);
+      houseFilter.addEventListener('change', updateTableWithFilters);
+      classFilter.addEventListener('change', updateTableWithFilters);
+      
+      /* Select All handler */
+      selectAllCheckbox.addEventListener('change', function() {
+        getRowCheckboxes().forEach(cb => cb.checked = this.checked);
+        updateSelectionState();
+      });
+      
+      tableSelectAllCheckbox.addEventListener('change', function() {
+        getRowCheckboxes().forEach(cb => cb.checked = this.checked);
+        updateSelectionState();
+      });
+      
+      /* Individual checkboxes */
+      getRowCheckboxes().forEach(cb => {
+        cb.addEventListener('change', updateSelectionState);
+      });
+      
+      /* Delete button */
+      deleteBtn.addEventListener('click', function() {
+        const selected = getRowCheckboxes()
+          .filter(cb => cb.checked)
+          .map(cb => ({
+            userId: cb.getAttribute('data-userId'),
+            userType: cb.closest('tr').getAttribute('data-userType')
+          }));
+        
+        if (selected.length === 0) { showToast('Please select users to delete'); return; }
+        
+        showUserDeletionConfirmationModal(selected, currentUserId);
+      });
+    }
+
+    /* =============================================
+       MODAL: SEASON RESET CONFIRMATION
+       ============================================= */
+    function showSeasonResetConfirmationModal(cycleType) {
+      let modalHtml = `
+        <div class="modal-overlay active" id="seasonResetModal" style="z-index:10001;">
+          <div class="modal" style="max-width:500px;">
+            <h3 style="color:var(--text);margin-bottom:20px;">⚠️ Execute Season Reset</h3>
+            
+            <div class="admin-highlight">
+              <strong>CAUTION:</strong> This action will:
+              <ul style="margin:8px 0 0 16px;padding:8px;">
+                <li>Archive current season data</li>
+                <li>Reset all house points to 0</li>
+                <li>Reset all student XP</li>
+                ${cycleType === 'Yearly' ? '<li>Increment all year groups</li>' : ''}
+                <li>Send notification to all students</li>
+              </ul>
+            </div>
+            
+            <p style="color:var(--text-2);margin:16px 0;">
+              To confirm, type <strong style="color:var(--text);">RESET</strong> below:
+            </p>
+            
+            <input type="text" id="seasonResetConfirmInput" class="confirmation-input" placeholder="Type RESET here" style="text-transform:uppercase;">
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;">
+              <button class="btn btn-secondary" onclick="document.getElementById('seasonResetModal').remove();showToast('Reset cancelled')">Cancel</button>
+              <button class="btn admin-danger" id="seasonResetExecuteBtn" disabled style="opacity:0.5;cursor:not-allowed;">Execute Reset</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(document.createElement('div')).innerHTML = modalHtml;
+      const modal = document.getElementById('seasonResetModal');
+      const input = document.getElementById('seasonResetConfirmInput');
+      const executeBtn = document.getElementById('seasonResetExecuteBtn');
+      
+      input.addEventListener('input', function() {
+        if (this.value.toUpperCase() === 'RESET') {
+          input.classList.add('valid');
+          executeBtn.disabled = false;
+          executeBtn.style.opacity = '1';
+          executeBtn.style.cursor = 'pointer';
+        } else {
+          input.classList.remove('valid');
+          executeBtn.disabled = true;
+          executeBtn.style.opacity = '0.5';
+          executeBtn.style.cursor = 'not-allowed';
+        }
+      });
+      
+      executeBtn.addEventListener('click', function() {
+        const archive = executeSeasonReset(cycleType);
+        modal.remove();
+        showToast('✓ Season reset complete! Data archived.');
+        logAdminAction(currentTeacherId, 'execute_season_reset', { cycleType, archiveId: archive._id });
+        renderSeasonManagementPanel();
+      });
+    }
+
+    /* =============================================
+       MODAL: USER DELETION CONFIRMATION
+       ============================================= */
+    function showUserDeletionConfirmationModal(selectedUsers, currentUserId) {
+      const userSummary = selectedUsers
+        .map(u => {
+          const user = u.userType === 'student' 
+            ? sdkLoad('students', u.userId)
+            : sdkLoad('teachers', u.userId);
+          return user ? `${user.firstName} ${user.familyName}` : 'Unknown';
+        })
+        .join(', ');
+      
+      let modalHtml = `
+        <div class="modal-overlay active" id="userDeletionModal" style="z-index:10001;">
+          <div class="modal" style="max-width:520px;">
+            <h3 style="color:var(--text);margin-bottom:20px;">⚠️ Confirm User Deletion</h3>
+            
+            <div class="admin-highlight">
+              <strong>CAUTION:</strong> This will permanently delete:
+              <ul style="margin:8px 0 0 16px;padding:8px;">
+                <li>${selectedUsers.length} user account(s)</li>
+                <li>All associated records (points, progress, history)</li>
+                <li>This action CANNOT be undone</li>
+              </ul>
+              <div style="margin-top:12px;font-weight:600;">Users affected: ${userSummary}</div>
+            </div>
+            
+            <p style="color:var(--text-2);margin:16px 0;">
+              To confirm, type <strong style="color:var(--text);">CONFIRM</strong> below:
+            </p>
+            
+            <input type="text" id="userDeletionConfirmInput" class="confirmation-input" placeholder="Type CONFIRM here" style="text-transform:uppercase;">
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;">
+              <button class="btn btn-secondary" onclick="document.getElementById('userDeletionModal').remove();showToast('Deletion cancelled')">Cancel</button>
+              <button class="btn admin-danger" id="userDeletionExecuteBtn" disabled style="opacity:0.5;cursor:not-allowed;">Delete Users</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(document.createElement('div')).innerHTML = modalHtml;
+      const modal = document.getElementById('userDeletionModal');
+      const input = document.getElementById('userDeletionConfirmInput');
+      const executeBtn = document.getElementById('userDeletionExecuteBtn');
+      
+      input.addEventListener('input', function() {
+        if (this.value.toUpperCase() === 'CONFIRM') {
+          input.classList.add('valid');
+          executeBtn.disabled = false;
+          executeBtn.style.opacity = '1';
+          executeBtn.style.cursor = 'pointer';
+        } else {
+          input.classList.remove('valid');
+          executeBtn.disabled = true;
+          executeBtn.style.opacity = '0.5';
+          executeBtn.style.cursor = 'not-allowed';
+        }
+      });
+      
+      executeBtn.addEventListener('click', function() {
+        const results = {
+          students: { success: 0, failed: [] },
+          teachers: { success: 0, failed: [] }
+        };
+        
+        selectedUsers.forEach(u => {
+          const result = u.userType === 'student'
+            ? deleteStudent(u.userId, currentUserId)
+            : deleteTeacher(u.userId, currentUserId);
+          
+          if (result) {
+            results[u.userType + 's'].success++;
+          } else {
+            results[u.userType + 's'].failed.push(u.userId);
+          }
+        });
+        
+        modal.remove();
+        showToast(`✓ Deleted ${results.students.success + results.teachers.success} user(s)`);
+        logAdminAction(currentTeacherId, 'bulk_delete_users', { count: selectedUsers.length, results });
+        renderUserManagementPanel();
       });
     }
 
@@ -6058,6 +8112,7 @@
       const hpAlreadyAwarded = student.quizProgress.hpAwarded || 0;
       const newHP = hpFromXP - hpAlreadyAwarded;
       if (newHP > 0) {
+        const oldRank = checkRankImprovement(student._id || student.id, Infinity); // Get current rank before awarding
         student.housePoints = (student.housePoints || 0) + newHP;
         student.quizProgress.hpAwarded = hpFromXP;
         for (let i = 0; i < newHP; i++) {
@@ -6067,6 +8122,8 @@
           });
         }
         sdkSave('students', student._id || student.id, student);
+        /* Check for rank improvement */
+        checkRankImprovement(student._id || student.id, oldRank);
       }
     }
 
@@ -6158,6 +8215,35 @@
       renderLessonGrid(sportKey);
     }
 
+    /* ---- getLessonTitle ---- */
+    function getLessonTitle(sportKey, lessonNum, student) {
+      /* Lessons with custom topic support: 2, 3, 4, 6, 7, 8 */
+      const customTopicLessons = [2, 3, 4, 6, 7, 8];
+      
+      if (!customTopicLessons.includes(lessonNum)) {
+        return `Lesson ${lessonNum} — Practice`;
+      }
+      
+      if (!student || !student.sportProgress || !student.sportProgress[sportKey]) {
+        return `Lesson ${lessonNum} — Practice`;
+      }
+      
+      const sp = student.sportProgress[sportKey];
+      const lessonData = (sp.lessonData || []).find(d => d.lessonNum === lessonNum);
+      
+      if (!lessonData || !lessonData.topic || lessonData.topic.trim() === '') {
+        return `Lesson ${lessonNum} — Practice`;
+      }
+      
+      /* Truncate to 25 characters */
+      let displayTopic = lessonData.topic.trim();
+      if (displayTopic.length > 25) {
+        displayTopic = displayTopic.substring(0, 22) + '...';
+      }
+      
+      return `Lesson ${lessonNum} — ${displayTopic}`;
+    }
+
     /* ---- renderLessonGrid ---- */
     function renderLessonGrid(sportKey) {
       const student = sdkLoad('students', currentStudentId);
@@ -6174,12 +8260,25 @@
       for (let i = 1; i <= 10; i++) {
         const isAssessment = assessmentLessons.includes(i);
         const icon = isAssessment ? '📋' : '🏃';
-        const label = isAssessment ? `Lesson ${i} — Assessment` : `Lesson ${i} — Practice`;
         const isDone = completed.includes(i);
+        
+        /* Get dynamic lesson title (custom or default) */
+        let label;
+        if (isAssessment) {
+          label = `Lesson ${i} — Assessment`;
+        } else {
+          label = getLessonTitle(sportKey, i, student);
+        }
+        
+        /* Check if lesson has custom title */
+        const customTopicLessons = [2, 3, 4, 6, 7, 8];
+        const hasCustomTitle = customTopicLessons.includes(i) && 
+          student.sportProgress[sportKey]?.lessonData?.some(d => d.lessonNum === i && d.topic);
+        
         html += `<div class="lesson-tile ${isDone ? '' : 'pending'}" onclick="openLesson('${sportKey}', ${i})">
           ${isDone ? '<span class="tile-check">✅</span>' : ''}
           <span class="tile-icon">${icon}</span>
-          <span class="tile-label">${label}</span>
+          <span class="tile-label ${hasCustomTitle ? 'custom-topic' : ''}">${label}</span>
         </div>`;
       }
 
@@ -6549,6 +8648,10 @@
       }
 
       checkAchievements(student);
+      
+      /* Refresh lesson grid to show updated custom title immediately */
+      setTimeout(() => renderLessonGrid(sportKey), 100);
+      
       backToLessonGridClick();
     }
 
@@ -7409,6 +9512,647 @@
     /* =============================================
        STEP 14 - HOUSE POINTS MODULE
        ============================================= */
+    function getClosestRivals(studentId) {
+      const allStudents = sdkLoadAll('students');
+      const sortedStudents = allStudents.slice().sort((a, b) => (b.housePoints || 0) - (a.housePoints || 0));
+      
+      const studentIndex = sortedStudents.findIndex(s => s._id === studentId);
+      if (studentIndex === -1) return [];
+      
+      const start = Math.max(0, studentIndex - 3);
+      const end = Math.min(sortedStudents.length, studentIndex + 4); // +4 to include up to 3 after
+      
+      const rivals = sortedStudents.slice(start, end);
+      
+      return rivals.map((s, idx) => {
+        const actualRank = start + idx + 1;
+        const currentStudentPoints = sortedStudents[studentIndex].housePoints || 0;
+        const rivalPoints = s.housePoints || 0;
+        return {
+          rank: actualRank,
+          student: s,
+          isCurrentUser: s._id === studentId,
+          pointDifference: s._id === studentId ? 0 : currentStudentPoints - rivalPoints
+        };
+      });
+    }
+
+    function checkRankImprovement(studentId, oldRank) {
+      const allStudents = sdkLoadAll('students');
+      const sortedStudents = allStudents.slice().sort((a, b) => (b.housePoints || 0) - (a.housePoints || 0));
+      const newRank = sortedStudents.findIndex(s => s._id === studentId) + 1;
+      
+      if (newRank < oldRank && newRank > 0) {
+        // Rank improved - find who was overtaken
+        let overtakenName = '';
+        if (oldRank <= sortedStudents.length) {
+          const overtakenStudent = sortedStudents[oldRank - 1];
+          if (overtakenStudent && overtakenStudent._id !== studentId) {
+            overtakenName = `${overtakenStudent.firstName} ${overtakenStudent.familyName}`;
+          }
+        }
+        
+        // Points to next
+        const pointsLeft = newRank > 1 ? (sortedStudents[newRank - 2].housePoints || 0) - (sortedStudents[newRank - 1].housePoints || 0) : 0;
+        const nextName = newRank > 1 ? `${sortedStudents[newRank - 2].firstName} ${sortedStudents[newRank - 2].familyName}` : 'the top';
+        
+        const overtookText = overtakenName ? `You just overtook ${overtakenName} and ` : '';
+        const nextText = pointsLeft > 0 ? ` Only ${pointsLeft} points left to catch ${nextName}!` : '';
+        
+        showToast(`🔥 Rank Up! ${overtookText}moved into #${newRank} place!${nextText}`);
+      }
+      
+      return newRank;
+    }
+
+    /* =============================================
+       ADMIN RENDER: ID MANAGEMENT DASHBOARD
+       ============================================= */
+    function renderIdManagementPanel() {
+      const container = document.getElementById('adminTabIdManagement');
+      const currentTeacher = sdkLoad('teachers', currentTeacherId);
+      
+      if (!currentTeacher || !currentTeacher.isHouseTeamManager) {
+        container.innerHTML = '<p style="color:var(--text-2);">Access denied.</p>';
+        return;
+      }
+      
+      const allAuthorizedIds = sdkLoadAll('authorizedIds') || [];
+      const enforceIdToggle = getEnforceIdToggle();
+      
+      let html = `<div class="admin-panel">
+        <h3 style="margin-bottom:20px;">🔐 ID Management - Register & Authorize Students/Teachers</h3>
+        
+        <!-- Global ID Enforcement Toggle Section -->
+        <div style="margin-bottom:30px;padding:16px;background:var(--surface-2);border-radius:8px;border:2px solid ${enforceIdToggle ? 'var(--accent)' : '#ff9500'};box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h4 style="margin:0;font-size:1rem;">🔒 Enforce Pre-Authorized ID List</h4>
+            <label style="display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;">
+              <input type="checkbox" id="enforceIdToggle" ${enforceIdToggle ? 'checked' : ''} style="width:20px;height:20px;cursor:pointer;">
+              <span id="toggleStatus" style="font-weight:600;font-size:1rem;color:${enforceIdToggle ? 'var(--accent)' : '#ff9500'};">${enforceIdToggle ? '✅ ON (Strict)' : '⚠️ OFF (Flexible)'}</span>
+            </label>
+          </div>
+          <p style="color:var(--text-2);font-size:0.9rem;margin:0 0 12px 0;line-height:1.5;">
+            <strong>When ON (✅):</strong> Students and teachers can only register with IDs from the authorized list below.<br/>
+            <strong>When OFF (⚠️):</strong> Any user can register with any ID (but IDs must still be unique).
+          </p>
+          <div style="padding:12px;background:var(--surface);border-radius:4px;border-left:3px solid ${enforceIdToggle ? 'var(--accent)' : '#ff9500'};">
+            <p style="font-size:0.85rem;color:var(--text-2);margin:0;">
+              ${enforceIdToggle ? '🔐 <strong>STRICT MODE</strong><br/>Only pre-registered users can join this system.' : '🔓 <strong>FLEXIBLE MODE</strong><br/>Any user can register (duplicates still prevented).'}
+            </p>
+          </div>
+        </div>
+        
+        <!-- CSV Upload Section -->
+        <div style="margin-bottom:30px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">
+          <h4 style="margin-bottom:12px;">📤 Bulk Upload Authorized IDs</h4>
+          <p style="color:var(--text-2);font-size:0.9rem;margin-bottom:12px;">Upload a CSV file with the following columns (case-insensitive):</p>
+          <code style="background:var(--surface);padding:8px;border-radius:4px;font-size:0.85rem;display:block;margin-bottom:12px;">ID, Type, FirstName, LastName</code>
+          <p style="color:var(--text-2);font-size:0.85rem;margin-bottom:12px;"><strong>Example:</strong></p>
+          <code style="background:var(--surface);padding:8px;border-radius:4px;font-size:0.75rem;display:block;margin-bottom:12px;">S001, student, John, Doe
+T001, teacher, Jane, Smith</code>
+          
+          <div class="form-group">
+            <label for="idCsvUpload">Choose CSV File</label>
+            <input type="file" id="idCsvUpload" accept=".csv" class="form-input" style="cursor:pointer;">
+            <button onclick="processIdCsvUpload()" class="btn btn-primary" style="width:100%;margin-top:8px;">📤 Upload IDs</button>
+          </div>
+        </div>
+        
+        <!-- Add Single ID Section -->
+        <div style="margin-bottom:30px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">
+          <h4 style="margin-bottom:12px;">➕ Add Single Authorized ID</h4>
+          <div class="form-group">
+            <label for="newIdValue">ID Value</label>
+            <input type="text" id="newIdValue" class="form-input" placeholder="e.g., S001, T001" style="text-transform:uppercase;">
+          </div>
+          <div class="form-group">
+            <label for="newIdType">User Type</label>
+            <select id="newIdType" class="form-select">
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="newIdFirstName">First Name (Optional)</label>
+            <input type="text" id="newIdFirstName" class="form-input" placeholder="Preset first name">
+          </div>
+          <div class="form-group">
+            <label for="newIdLastName">Last Name (Optional)</label>
+            <input type="text" id="newIdLastName" class="form-input" placeholder="Preset last name">
+          </div>
+          <button onclick="addSingleAuthorizedId()" class="btn btn-primary" style="width:100%;">➕ Add ID</button>
+        </div>
+        
+        <!-- ID List & Management -->
+        <div style="margin-bottom:20px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">
+          <h4 style="margin-bottom:12px;">📋 Authorized IDs (${allAuthorizedIds.length})</h4>
+          
+          <div class="form-group">
+            <input type="text" id="idSearchFilter" class="form-input" placeholder="Search ID, name..." style="margin-bottom:12px;">
+            <select id="idTypeFilter" class="form-select" style="margin-bottom:12px;">
+              <option value="">All Types</option>
+              <option value="student">Students</option>
+              <option value="teacher">Teachers</option>
+            </select>
+            <select id="idStatusFilter" class="form-select">
+              <option value="">All Status</option>
+              <option value="available">Available (Not Registered)</option>
+              <option value="registered">Registered</option>
+            </select>
+          </div>
+          
+          <div id="idListContainer" style="max-height:600px;overflow-y:auto;border:1px solid var(--border);border-radius:4px;">
+            ${renderIdList(allAuthorizedIds)}
+          </div>
+        </div>
+        
+        <!-- Manager Dashboard: Validated IDs, Invalid IDs, Unregistered Users -->
+        <div style="margin-bottom:20px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">
+          <h4 style="margin-bottom:16px;">📊 ID Management Dashboard</h4>
+          
+          <!-- Dashboard Tabs -->
+          <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:2px solid var(--border);flex-wrap:wrap;">
+            <button onclick="switchDashboardTab('validated')" id="dashTab-validated" class="btn" style="padding:8px 16px;border:none;border-bottom:3px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-weight:600;">✅ Validated IDs</button>
+            <button onclick="switchDashboardTab('invalid')" id="dashTab-invalid" class="btn" style="padding:8px 16px;border:none;border-bottom:3px solid transparent;background:transparent;color:var(--text-2);cursor:pointer;font-weight:600;">❌ Invalid IDs</button>
+            <button onclick="switchDashboardTab('unregistered')" id="dashTab-unregistered" class="btn" style="padding:8px 16px;border:none;border-bottom:3px solid transparent;background:transparent;color:var(--text-2);cursor:pointer;font-weight:600;">👤 Unregistered Users</button>
+          </div>
+          
+          <!-- Filters -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+            <select id="dashFilterUserType" onchange="updateDashboard()" class="form-select" style="font-size:0.9rem;">
+              <option value="">All User Types</option>
+              <option value="student">Students Only</option>
+              <option value="teacher">Teachers Only</option>
+            </select>
+            <select id="dashFilterYearGroup" onchange="updateDashboard()" class="form-select" style="font-size:0.9rem;">
+              <option value="">All Year Groups (Students)</option>
+              <option value="1">Year 1</option>
+              <option value="2">Year 2</option>
+              <option value="3">Year 3</option>
+              <option value="4">Year 4</option>
+              <option value="5">Year 5</option>
+              <option value="6">Year 6</option>
+              <option value="7">Year 7</option>
+              <option value="8">Year 8</option>
+              <option value="9">Year 9</option>
+              <option value="10">Year 10</option>
+              <option value="11">Year 11</option>
+              <option value="12">Year 12</option>
+              <option value="13">Year 13</option>
+            </select>
+            <input type="text" id="dashSearchText" onkeyup="updateDashboard()" class="form-input" placeholder="Search name or ID..." style="font-size:0.9rem;grid-column:1/3;">
+          </div>
+          
+          <!-- Dashboard Content -->
+          <div id="dashboardContent" style="min-height:300px;max-height:600px;overflow-y:auto;border:1px solid var(--border);border-radius:4px;padding:12px;background:var(--surface);">
+            Loading dashboard data...
+          </div>
+        </div>
+      </div>`;
+      
+      container.innerHTML = html;
+      
+      /* Initialize dashboard */
+      setTimeout(() => {
+        updateDashboard();
+      }, 100);
+      
+      /* Add event listeners for filters */
+      const applyIdFilters = () => {
+        const searchVal = document.getElementById('idSearchFilter').value.toLowerCase();
+        const typeVal = document.getElementById('idTypeFilter').value;
+        const statusVal = document.getElementById('idStatusFilter').value;
+        
+        let filtered = allAuthorizedIds.filter(id => {
+          let match = true;
+          if (searchVal) {
+            const searchText = `${id.idValue} ${id.presetFirstName} ${id.presetLastName}`.toLowerCase();
+            match = searchText.includes(searchVal);
+          }
+          if (typeVal && id.type !== typeVal) match = false;
+          if (statusVal === 'available' && id.registered) match = false;
+          if (statusVal === 'registered' && !id.registered) match = false;
+          return match;
+        });
+        
+        document.getElementById('idListContainer').innerHTML = renderIdList(filtered);
+      };
+      
+      document.getElementById('idSearchFilter').addEventListener('input', applyIdFilters);
+      document.getElementById('idTypeFilter').addEventListener('change', applyIdFilters);
+      document.getElementById('idStatusFilter').addEventListener('change', applyIdFilters);
+      
+      /* Add event listener for the global ID enforcement toggle */
+      const enforceIdToggleCheckbox = document.getElementById('enforceIdToggle');
+      if (enforceIdToggleCheckbox) {
+        enforceIdToggleCheckbox.addEventListener('change', function() {
+          const isEnabled = this.checked;
+          const currentState = getEnforceIdToggle();
+          
+          /* Show confirmation dialog */
+          const message = isEnabled ? 
+            'ID Management: TURN ON\n\n✅ Students and teachers will now ONLY be able to register with pre-authorized IDs from the list below.\n\nAre you sure?' :
+            'ID Management: TURN OFF\n\n⚠️ Students and teachers will now be able to register with ANY ID (though IDs must still be unique).\n\nAre you sure?';
+          
+          if (confirm(message)) {
+            setEnforceIdToggle(isEnabled);
+            
+            /* Update UI */
+            const statusSpan = document.getElementById('toggleStatus');
+            if (statusSpan) {
+              statusSpan.textContent = isEnabled ? '✅ ON (Strict)' : '⚠️ OFF (Flexible)';
+              statusSpan.style.color = isEnabled ? 'var(--accent)' : '#ff9500';
+            }
+            
+            /* Show toast */
+            const toastMsg = isEnabled ? 
+              '✅ ID Management is now ON (Strict Mode)' :
+              '⚠️ ID Management is now OFF (Flexible Mode)';
+            showToast(toastMsg);
+            
+            console.log('[ID Enforcement] Toggled to:', isEnabled ? 'ON' : 'OFF');
+          } else {
+            /* Revert checkbox if user cancelled */
+            this.checked = currentState;
+          }
+        });
+      }
+    }
+
+    function renderIdList(authorizedIds) {
+      if (authorizedIds.length === 0) {
+        return '<div style="padding:20px;text-align:center;color:var(--text-2);">No authorized IDs found.</div>';
+      }
+      
+      return authorizedIds.map(id => {
+        const statusIcon = id.registered ? '✅' : '⭕';
+        const statusText = id.registered ? 'Registered' : 'Available';
+        const linkedName = id.linkedStudentId || id.linkedTeacherId ? '(Active)' : '';
+        const presetName = id.presetFirstName || id.presetLastName ? `${id.presetFirstName || ''} ${id.presetLastName || ''}`.trim() : 'No preset';
+        
+        return `<div style="padding:12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+          <div style="flex:1;">
+            <div style="font-weight:600;color:var(--accent);">${id.idValue}</div>
+            <div style="font-size:0.85rem;color:var(--text-2);">Type: <strong>${id.type}</strong> · Preset: <strong>${presetName}</strong></div>
+            <div style="font-size:0.85rem;color:var(--text-2);">Status: ${statusIcon} <strong>${statusText}</strong> ${linkedName}</div>
+            ${id.lastAttempt ? `<div style="font-size:0.8rem;color:var(--text-3);">Last attempt: ${new Date(id.lastAttempt).toLocaleString()}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="editAuthorizedId('${id.idValue}')" class="btn" style="padding:6px 12px;font-size:0.85rem;">✏️ Edit</button>
+            <button onclick="deleteAuthorizedId('${id.idValue}')" class="btn" style="padding:6px 12px;font-size:0.85rem;background:#ff4444;color:#fff;">🗑️ Delete</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    /* =============================================
+       MANAGER DASHBOARD: ID Management Analytics
+       ============================================= */
+    let currentDashboardTab = 'validated';
+
+    function switchDashboardTab(tabName) {
+      currentDashboardTab = tabName;
+      
+      /* Update tab buttons */
+      ['validated', 'invalid', 'unregistered'].forEach(tab => {
+        const btn = document.getElementById(`dashTab-${tab}`);
+        if (btn) {
+          if (tab === tabName) {
+            btn.style.borderBottomColor = 'var(--accent)';
+            btn.style.color = 'var(--accent)';
+          } else {
+            btn.style.borderBottomColor = 'transparent';
+            btn.style.color = 'var(--text-2)';
+          }
+        }
+      });
+      
+      updateDashboard();
+    }
+
+    function updateDashboard() {
+      const userTypeFilter = document.getElementById('dashFilterUserType')?.value || '';
+      const yearGroupFilter = document.getElementById('dashFilterYearGroup')?.value || '';
+      const searchText = document.getElementById('dashSearchText')?.value.toLowerCase() || '';
+      
+      const allStudents = sdkLoadAll('students') || [];
+      const allTeachers = sdkLoadAll('teachers') || [];
+      const allAuthorizedIds = sdkLoadAll('authorizedIds') || [];
+      
+      let html = '';
+      
+      if (currentDashboardTab === 'validated') {
+        // Validated IDs: Users WITH linked IDs
+        const validatedUsers = [];
+        
+        allStudents.forEach(student => {
+          if ((userTypeFilter === '' || userTypeFilter === 'student') &&
+              (yearGroupFilter === '' || student.yearGroup?.toString() === yearGroupFilter) &&
+              student.authorizedId &&
+              (searchText === '' || 
+               student.firstName.toLowerCase().includes(searchText) ||
+               student.familyName.toLowerCase().includes(searchText) ||
+               student.authorizedId.toLowerCase().includes(searchText))) {
+            validatedUsers.push({
+              type: 'student',
+              name: `${student.firstName} ${student.familyName}`,
+              id: student.authorizedId,
+              yearGroup: student.yearGroup,
+              classGrade: student.classGrade,
+              house: student.house,
+              linkedAt: student.createdAt
+            });
+          }
+        });
+        
+        allTeachers.forEach(teacher => {
+          if ((userTypeFilter === '' || userTypeFilter === 'teacher') &&
+              teacher.authorizedId &&
+              (searchText === '' || 
+               teacher.firstName.toLowerCase().includes(searchText) ||
+               teacher.familyName.toLowerCase().includes(searchText) ||
+               teacher.authorizedId.toLowerCase().includes(searchText))) {
+            validatedUsers.push({
+              type: 'teacher',
+              name: `${teacher.firstName} ${teacher.familyName}`,
+              id: teacher.authorizedId,
+              linkedAt: teacher.createdAt
+            });
+          }
+        });
+        
+        if (validatedUsers.length === 0) {
+          html = '<div style="padding:20px;text-align:center;color:var(--text-2);">No validated IDs found.</div>';
+        } else {
+          html = `<div style="font-size:0.9rem;"><strong>${validatedUsers.length} User(s) with Valid IDs</strong></div>`;
+          validatedUsers.forEach(user => {
+            const icon = user.type === 'student' ? '👤' : '👨‍🏫';
+            const details = user.type === 'student' ? 
+              `${user.classGrade ? '📚 ' + user.classGrade + ' ' : ''}${user.house ? '🏠 ' + user.house : ''}`.trim() :
+              '👨‍🏫 Teacher';
+            html += `<div style="padding:10px;margin-top:8px;background:var(--surface-2);border-radius:6px;border-left:3px solid var(--accent);">
+              <div style="font-weight:600;">✅ ${user.name} (${user.id})</div>
+              <div style="font-size:0.85rem;color:var(--text-2);margin-top:4px;">${icon} ${details}</div>
+            </div>`;
+          });
+        }
+        
+      } else if (currentDashboardTab === 'invalid') {
+        // Invalid IDs: Authorized IDs NOT yet registered
+        const invalidIds = allAuthorizedIds.filter(id =>
+          !id.registered &&
+          (userTypeFilter === '' || id.type === userTypeFilter) &&
+          (searchText === '' || 
+           id.idValue.toLowerCase().includes(searchText) ||
+           (id.presetFirstName + ' ' + id.presetLastName).toLowerCase().includes(searchText))
+        );
+        
+        if (invalidIds.length === 0) {
+          html = '<div style="padding:20px;text-align:center;color:var(--text-2);">All authorized IDs are claimed!</div>';
+        } else {
+          html = `<div style="font-size:0.9rem;"><strong>${invalidIds.length} Unclaimed ID(s)</strong></div>`;
+          invalidIds.forEach(id => {
+            const presetName = id.presetFirstName || id.presetLastName ?
+              `${id.presetFirstName} ${id.presetLastName}`.trim() : 'No preset';
+            html += `<div style="padding:10px;margin-top:8px;background:var(--surface-2);border-radius:6px;border-left:3px solid #ff9500;">
+              <div style="font-weight:600;">⚠️ ${id.idValue}</div>
+              <div style="font-size:0.85rem;color:var(--text-2);margin-top:4px;">Type: ${id.type === 'student' ? '👤 Student' : '👨‍🏫 Teacher'} | Preset: ${presetName}</div>
+            </div>`;
+          });
+        }
+        
+      } else if (currentDashboardTab === 'unregistered') {
+        // Unregistered Users: Users with NO ID
+        const unregisteredUsers = [];
+        
+        allStudents.forEach(student => {
+          if ((userTypeFilter === '' || userTypeFilter === 'student') &&
+              (yearGroupFilter === '' || student.yearGroup?.toString() === yearGroupFilter) &&
+              !student.authorizedId &&
+              (searchText === '' || 
+               student.firstName.toLowerCase().includes(searchText) ||
+               student.familyName.toLowerCase().includes(searchText) ||
+               student.studentId.toLowerCase().includes(searchText))) {
+            unregisteredUsers.push({
+              type: 'student',
+              name: `${student.firstName} ${student.familyName}`,
+              userId: student.studentId,
+              yearGroup: student.yearGroup,
+              classGrade: student.classGrade,
+              house: student.house,
+              createdAt: student.createdAt
+            });
+          }
+        });
+        
+        allTeachers.forEach(teacher => {
+          if ((userTypeFilter === '' || userTypeFilter === 'teacher') &&
+              !teacher.authorizedId &&
+              (searchText === '' || 
+               teacher.firstName.toLowerCase().includes(searchText) ||
+               teacher.familyName.toLowerCase().includes(searchText) ||
+               teacher.teacherId.toLowerCase().includes(searchText))) {
+            unregisteredUsers.push({
+              type: 'teacher',
+              name: `${teacher.firstName} ${teacher.familyName}`,
+              userId: teacher.teacherId,
+              createdAt: teacher.createdAt
+            });
+          }
+        });
+        
+        if (unregisteredUsers.length === 0) {
+          html = '<div style="padding:20px;text-align:center;color:var(--text-2);">All users have IDs linked!</div>';
+        } else {
+          html = `<div style="font-size:0.9rem;"><strong>⚠️ ${unregisteredUsers.length} User(s) need to add ID</strong></div>`;
+          unregisteredUsers.forEach(user => {
+            const icon = user.type === 'student' ? '👤' : '👨‍🏫';
+            const details = user.type === 'student' ? 
+              `${user.classGrade ? '📚 ' + user.classGrade + ' ' : ''}${user.house ? '🏠 ' + user.house : ''}`.trim() :
+              '👨‍🏫 Teacher';
+            html += `<div style="padding:10px;margin-top:8px;background:var(--surface-2);border-radius:6px;border-left:3px solid #ff4444;">
+              <div style="font-weight:600;">❌ ${user.name}</div>
+              <div style="font-size:0.85rem;color:var(--text-2);margin-top:4px;">${icon} ${details}</div>
+            </div>`;
+          });
+        }
+      }
+      
+      const contentDiv = document.getElementById('dashboardContent');
+      if (contentDiv) {
+        contentDiv.innerHTML = html;
+      }
+    }
+
+    function addSingleAuthorizedId() {
+      const idValue = document.getElementById('newIdValue').value.trim().toUpperCase();
+      const idType = document.getElementById('newIdType').value;
+      const firstName = document.getElementById('newIdFirstName').value.trim();
+      const lastName = document.getElementById('newIdLastName').value.trim();
+      
+      if (!idValue) {
+        showToast('❌ ID value is required');
+        return;
+      }
+      
+      /* Check if ID already exists */
+      const existing = sdkLoad('authorizedIds', idValue);
+      if (existing) {
+        showToast('❌ This ID already exists');
+        return;
+      }
+      
+      const authData = {
+        _id: idValue,
+        idValue: idValue,
+        type: idType,
+        presetFirstName: firstName,
+        presetLastName: lastName,
+        registered: false,
+        createdAt: new Date().toISOString(),
+        lastAttempt: null
+      };
+      
+      sdkSave('authorizedIds', idValue, authData);
+      showToast(`✅ ID "${idValue}" added successfully`);
+      
+      /* Clear form */
+      document.getElementById('newIdValue').value = '';
+      document.getElementById('newIdFirstName').value = '';
+      document.getElementById('newIdLastName').value = '';
+      document.getElementById('newIdType').value = 'student';
+      
+      /* Re-render */
+      renderIdManagementPanel();
+    }
+
+    function processIdCsvUpload() {
+      const fileInput = document.getElementById('idCsvUpload');
+      const file = fileInput.files[0];
+      
+      if (!file) {
+        showToast('❌ Please select a CSV file');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const csv = e.target.result;
+        const lines = csv.split('\n');
+        let addedCount = 0;
+        let errorCount = 0;
+        
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+          
+          const [idVal, type, firstName, lastName] = line.split(',').map(s => s.trim());
+          
+          if (!idVal || !type) {
+            errorCount++;
+            continue;
+          }
+          
+          const idValue = idVal.toUpperCase();
+          const userType = type.toLowerCase();
+          
+          /* Validate type */
+          if (userType !== 'student' && userType !== 'teacher') {
+            errorCount++;
+            continue;
+          }
+          
+          /* Check if ID already exists */
+          const existing = sdkLoad('authorizedIds', idValue);
+          if (existing) {
+            errorCount++;
+            continue;
+          }
+          
+          const authData = {
+            _id: idValue,
+            idValue: idValue,
+            type: userType,
+            presetFirstName: firstName || '',
+            presetLastName: lastName || '',
+            registered: false,
+            createdAt: new Date().toISOString(),
+            lastAttempt: null
+          };
+          
+          sdkSave('authorizedIds', idValue, authData);
+          addedCount++;
+        }
+        
+        showToast(`✅ Imported ${addedCount} IDs${errorCount > 0 ? `, ${errorCount} errors` : ''}`);
+        fileInput.value = '';
+        renderIdManagementPanel();
+      };
+      
+      reader.readAsText(file);
+    }
+
+    function editAuthorizedId(idValue) {
+      const authRecord = sdkLoad('authorizedIds', idValue);
+      if (!authRecord) return;
+      
+      const newFirstName = prompt('First Name:', authRecord.presetFirstName || '');
+      if (newFirstName === null) return; /* User cancelled */
+      
+      const newLastName = prompt('Last Name:', authRecord.presetLastName || '');
+      if (newLastName === null) return; /* User cancelled */
+      
+      authRecord.presetFirstName = newFirstName;
+      authRecord.presetLastName = newLastName;
+      
+      sdkSave('authorizedIds', idValue, authRecord);
+      showToast('✅ ID updated');
+      renderIdManagementPanel();
+    }
+
+    function deleteAuthorizedId(idValue) {
+      const authRecord = sdkLoad('authorizedIds', idValue);
+      if (!authRecord) return;
+      
+      if (!confirm(`Delete ID "${idValue}"? This action cannot be undone.`)) return;
+      
+      sdkDelete('authorizedIds', idValue);
+      showToast('✅ ID deleted');
+      renderIdManagementPanel();
+    }
+
+    function sendIdAuthorizationRequest(firstName, familyName, email, requestedId) {
+      const manager = getHouseTeamManager();
+      if (!manager) {
+        showToast('❌ No House Team Manager found. Please contact your school.');
+        return;
+      }
+      
+      const notifId = uuid();
+      const notif = {
+        _id: notifId,
+        managerId: manager._id,
+        type: 'id_authorization_request',
+        status: 'pending',
+        studentFirstName: firstName,
+        studentLastName: familyName,
+        studentEmail: email,
+        requestedId: requestedId.trim().toUpperCase(),
+        message: `${firstName} ${familyName} (${email}) is requesting authorization for ID: ${requestedId}`,
+        createdAt: new Date().toISOString(),
+        read: false
+      };
+      
+      sdkSave('teacherNotifications', notifId, notif);
+      showToast('✅ Authorization request sent to House Team Manager');
+      
+      /* Clear form after request */
+      setTimeout(() => {
+        location.reload();
+      }, 1500);
+    }
+
     function renderHousePoints(studentId) {
       const student = sdkLoad('students', studentId);
       if (!student) return;
@@ -7459,6 +10203,46 @@
       });
       html += '</div>';
 
+      /* Your Closest Rivals Card */
+      const rivals = getClosestRivals(studentId);
+      if (rivals.length > 0) {
+        html += '<div class="card" style="margin-top:20px;">';
+        html += '<h3 style="margin-bottom:16px;font-size:1.1rem;">🎯 Your Closest Rivals</h3>';
+        html += '<div class="rivals-table">';
+        
+        rivals.forEach(rival => {
+          const isCurrentUser = rival.isCurrentUser;
+          const houseColor = houseColors[rival.student.house] || '#666';
+          const bgColor = isCurrentUser ? houseColor : 'transparent';
+          const textColor = isCurrentUser ? '#fff' : 'var(--text)';
+          
+          let statusText = '';
+          if (isCurrentUser) {
+            statusText = 'YOU / Current';
+          } else if (rival.pointDifference > 0) {
+            // Above current user - find the closest one above
+            const aboveRivals = rivals.filter(r => !r.isCurrentUser && r.pointDifference > 0).sort((a, b) => a.rank - b.rank);
+            const isNextTarget = aboveRivals.length > 0 && rival.rank === aboveRivals[0].rank;
+            statusText = isNextTarget ? 'Next Target' : `+${rival.pointDifference} HP to catch`;
+          } else {
+            statusText = '—';
+          }
+          
+          html += `
+            <div class="rival-row ${isCurrentUser ? 'current-user' : ''}" style="background:${bgColor};color:${textColor};">
+              <div class="rival-rank">#${rival.rank}</div>
+              <div class="rival-name">${rival.student.firstName} ${rival.student.familyName}</div>
+              <div class="rival-house" style="color:${houseColor};">${rival.student.house}</div>
+              <div class="rival-points">${rival.student.housePoints || 0} HP</div>
+              <div class="rival-status">${statusText}</div>
+            </div>
+          `;
+        });
+        
+        html += '</div>';
+        html += '</div>';
+      }
+
       /* Personal summary */
       const myHP = student.housePoints || 0;
       const myHouse = student.house;
@@ -7469,14 +10253,29 @@
 
       /* Points breakdown */
       const myEvents = allEvents.filter(e => e.studentId === (student._id || studentId));
-      const teacherAssessments = myEvents.filter(e => e.source === 'teacher_assessment').reduce((sum, e) => sum + (e.points || 0), 0);
+      
+      /* Calculate teacher assessments from assessments collection (not events) */
+      const allAssessments = sdkLoadAll('assessments') || [];
+      const myAssessments = allAssessments.filter(a => a.studentId === (student._id || studentId) && a.source === 'teacher');
+      const teacherAssessments = myAssessments.reduce((sum, a) => {
+        const total = (a.skills || []).reduce((s, skill) => s + (skill.level || 0), 0);
+        return sum + total;
+      }, 0);
+      
       const quizXP = myEvents.filter(e => e.source === 'quiz_xp').reduce((sum, e) => sum + (e.points || 0), 0);
       const historyXP = myEvents.filter(e => e.source === 'history_quiz').reduce((sum, e) => sum + (e.points || 0), 0);
       const teacherBonuses = myEvents.filter(e => e.source === 'teacher_bonus').reduce((sum, e) => sum + (e.points || 0), 0);
       const otherHP = myHP - teacherAssessments - quizXP - historyXP - teacherBonuses;
+      console.log('[renderHousePoints] Breakdown - teacherAssessments:', teacherAssessments, 'other:', otherHP);
+
+      const profilePic = student.profilePic || getDefaultAvatar(`${student.firstName} ${student.familyName}`);
 
       html += `
         <div class="hp-personal">
+          <div style="text-align:center;margin-bottom:16px;">
+            <img src="${profilePic}" alt="${student.firstName} ${student.familyName}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);">
+            <div style="margin-top:8px;font-weight:600;font-size:1.1rem;">${student.firstName} ${student.familyName}</div>
+          </div>
           <div class="hp-total">${myHP} HP</div>
           <div class="hp-rank">Rank #${houseRank || '-'} in ${myHouse} House \u2022 #${overallRank || '-'} overall</div>
           <table class="hp-breakdown">
@@ -7489,12 +10288,24 @@
           </table>
           <div class="hp-recent">
             <h4>Recent Activity</h4>
-            ${myEvents.length > 0 ? myEvents.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map(e => `
-              <div class="hp-event">
-                <span>${e.note || e.source}</span>
-                <span>+${e.points || 0} HP</span>
-              </div>
-            `).join('') : '<p style="color:var(--text-2);font-size:0.85rem;">No activity yet</p>'}
+            ${(myEvents.length > 0 || myAssessments.length > 0) ? `
+              ${myAssessments.length > 0 ? myAssessments.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)).slice(0, 3).map(a => {
+                const total = (a.skills || []).reduce((s, skill) => s + (skill.level || 0), 0);
+                const sport = SPORTS_LIST.find(s => s.key === a.sportKey);
+                return `
+                  <div class="hp-event">
+                    <span>${sport ? sport.emoji + ' ' + sport.name : a.sportKey} Assessment</span>
+                    <span>+${total} HP</span>
+                  </div>
+                `;
+              }).join('') : ''}
+              ${myEvents.length > 0 ? myEvents.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map(e => `
+                <div class="hp-event">
+                  <span>${e.note || e.source}</span>
+                  <span>+${e.points || 0} HP</span>
+                </div>
+              `).join('') : ''}
+            ` : '<p style="color:var(--text-2);font-size:0.85rem;">No activity yet</p>'}
           </div>
         </div>
       `;
@@ -7509,6 +10320,74 @@
       const pendingChanges = getPendingChanges(studentId);
       
       let html = `<div style="max-width:600px;padding:16px;">`;
+
+      /* Profile Picture Section */
+      html += `<div style="margin-bottom:20px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);text-align:center;">`;
+      html += `<h3 style="margin-bottom:12px;font-size:1rem;">📸 Profile Picture</h3>`;
+      
+      /* Display current profile picture */
+      if (student.profilePic && student.profilePic.startsWith('data:')) {
+        html += `<img id="currentProfilePic" src="${student.profilePic}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;margin-bottom:12px;border:3px solid var(--accent);">`;
+      } else {
+        html += `<div id="currentProfilePic" style="width:120px;height:120px;border-radius:50%;background:var(--surface);border:3px solid var(--border);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:3rem;">📷</div>`;
+      }
+      
+      /* File input for upload */
+      html += `<div class="form-group">`;
+      html += `<label for="studentProfilePicUpload">Upload Photo</label>`;
+      html += `<input type="file" id="studentProfilePicUpload" accept="image/*" class="form-input" style="cursor:pointer;">`;
+      html += `<button onclick="updateStudentProfilePicture()" class="btn btn-primary" style="width:100%;margin-top:8px;">📤 Upload</button>`;
+      html += `</div>`;
+      
+      /* Camera input for taking photo */
+      html += `<div class="form-group">`;
+      html += `<label for="studentProfilePicCamera">Take Photo</label>`;
+      html += `<input type="file" id="studentProfilePicCamera" accept="image/*" capture="user" class="form-input" style="cursor:pointer;">`;
+      html += `<button onclick="updateStudentProfilePicture(true)" class="btn btn-primary" style="width:100%;margin-top:8px;">📸 Take Photo</button>`;
+      html += `</div>`;
+      
+      html += `</div>`;
+
+      /* Authorized ID Section */
+      html += `<div style="margin-bottom:20px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">`;
+      html += `<h3 style="margin-bottom:12px;font-size:1rem;">🔐 Authorized ID</h3>`;
+      
+      const enforceIdToggle = getEnforceIdToggle();
+      
+      if (student.authorizedId) {
+        html += `<div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid var(--accent);margin-bottom:12px;">`;
+        html += `<div style="font-weight:600;color:var(--accent);font-size:1.1rem;">${student.authorizedId}</div>`;
+        html += `<div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">✅ Your account is authorized and active</div>`;
+        html += `</div>`;
+        html += `<div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid #ff9500;">`;
+        html += `<div style="color:#ff9500;font-weight:600;font-size:0.95rem;">Want to change your ID?</div>`;
+        html += `<div style="color:var(--text-2);font-size:0.85rem;margin:8px 0 0 0;">Enter a new authorized ID below and request manager approval</div>`;
+        html += `</div>`;
+      } else {
+        html += `<div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid #ff4444;margin-bottom:12px;">`;
+        html += `<div style="color:#ff4444;font-weight:600;">⚠️ No Authorized ID linked</div>`;
+        
+        if (enforceIdToggle) {
+          html += `<div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;"><strong>⚠️ ID Management is currently ON</strong> - You must add an ID to activate your account</div>`;
+        } else {
+          html += `<div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">Enter your authorized ID below to activate your account</div>`;
+        }
+        html += `</div>`;
+      }
+      
+      <!-- ID Input Form -->
+      html += `<div class="form-group">`;
+      html += `<label for="settAuthorizedId">🔐 ${student.authorizedId ? 'New ' : ''}Authorized ID</label>`;
+      html += `<input type="text" id="settAuthorizedId" class="form-input" placeholder="Enter your authorized ID" style="text-transform:uppercase;">`;
+      html += `<div class="form-error" id="settAuthorizedIdErr" style="display:none;"></div>`;
+      const buttonText = student.authorizedId ? 'Request Change' : 'Link ID';
+      const buttonAction = student.authorizedId ? 
+        `requestAuthorizedIdChange('${studentId}', document.getElementById('settAuthorizedId').value)` :
+        `linkNewAuthorizedId('${studentId}', document.getElementById('settAuthorizedId').value)`;
+      html += `<button onclick="${buttonAction}" class="btn btn-primary" style="width:100%;margin-top:8px;">🔗 ${buttonText}</button>`;
+      html += `</div>`;
+      
+      html += `</div>`;
 
       /* Account Info Section */
       html += `<div style="margin-bottom:20px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">`;
@@ -7541,7 +10420,8 @@
           const fieldNames = {
             'classGrade': '📚 Class',
             'yearGroup': '📅 Year Group',
-            'house': '🏠 House Team'
+            'house': '🏠 House Team',
+            'authorizedId': '🔐 Authorized ID'
           };
           html += `<div style="padding:8px;background:var(--surface);border-radius:6px;margin-bottom:8px;font-size:0.9rem;">`;
           html += `<div><strong>${fieldNames[change.field] || change.field}</strong></div>`;
@@ -7606,6 +10486,51 @@
       updateActivityTimestamp(currentStudentId);
     }
 
+    async function updateStudentProfilePicture(isCamera = false) {
+      const inputId = isCamera ? 'studentProfilePicCamera' : 'studentProfilePicUpload';
+      const fileInput = document.getElementById(inputId);
+      const file = fileInput.files[0];
+      
+      if (!file) {
+        showToast('❌ Please select a file first');
+        return;
+      }
+      
+      /* Check file size (max 2MB) */
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('❌ File too large (max 2MB)');
+        return;
+      }
+      
+      try {
+        const profilePicData = await readFileAsDataURL(file);
+        const student = sdkLoad('students', currentStudentId);
+        if (!student) return;
+        
+        student.profilePic = profilePicData;
+        sdkSave('students', currentStudentId, student);
+        
+        /* Update the preview image */
+        const imgElement = document.getElementById('currentProfilePic');
+        if (imgElement) {
+          imgElement.src = profilePicData;
+          imgElement.style.width = '120px';
+          imgElement.style.height = '120px';
+          imgElement.style.borderRadius = '50%';
+          imgElement.style.objectFit = 'cover';
+        }
+        
+        /* Clear the file input */
+        fileInput.value = '';
+        
+        showToast(`✓ Profile picture updated!`);
+        updateActivityTimestamp(currentStudentId);
+      } catch (error) {
+        console.error('Error updating profile picture:', error);
+        showToast('❌ Error updating profile picture');
+      }
+    }
+
     function requestFieldChange(field, value) {
       if (!value) {
         showToast('❌ Please select a value');
@@ -7624,6 +10549,113 @@
       showToast(`✓ Change requested and awaiting manager approval`);
       renderStudentSettings(currentStudentId);
       updateActivityTimestamp(currentStudentId);
+    }
+
+    /* =============================================
+       AUTHORIZED ID MANAGEMENT FOR STUDENTS
+       ============================================= */
+    function linkNewAuthorizedId(studentId, idValue) {
+      const trimmedId = idValue.trim().toUpperCase();
+      const errorElement = document.getElementById('settAuthorizedIdErr');
+      
+      /* Clear previous error */
+      errorElement.style.display = 'none';
+      errorElement.textContent = '';
+      
+      if (!trimmedId) {
+        errorElement.textContent = '❌ Please enter an Authorized ID';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      /* Check if ID exists in Authorized_IDs database */
+      const authorizedRecord = sdkLoad('authorizedIds', trimmedId);
+      if (!authorizedRecord) {
+        errorElement.textContent = '❌ ID not recognized. Please check for typos or contact your PE Teacher.';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      /* Check if ID is already registered by someone else */
+      const allStudents = sdkLoadAll('students') || [];
+      const allTeachers = sdkLoadAll('teachers') || [];
+      const isDuplicate = allStudents.some(s => s.authorizedId === trimmedId && s._id !== studentId) ||
+                          allTeachers.some(t => t.authorizedId === trimmedId);
+      
+      if (isDuplicate) {
+        errorElement.textContent = '❌ This ID is already used by another user.';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      /* All validation passed - link the ID */
+      const student = sdkLoad('students', studentId);
+      if (!student) return;
+      
+      student.authorizedId = trimmedId;
+      sdkSave('students', studentId, student);
+      
+      /* Update the authorized record to mark as registered */
+      authorizedRecord.registered = true;
+      authorizedRecord.linkedStudentId = studentId;
+      authorizedRecord.lastAttempt = new Date().toISOString();
+      sdkSave('authorizedIds', trimmedId, authorizedRecord);
+      
+      showToast(`✅ Authorized ID linked successfully!`);
+      updateActivityTimestamp(studentId);
+      renderStudentSettings(studentId);
+    }
+
+    function requestAuthorizedIdChange(studentId, newIdValue) {
+      const trimmedId = newIdValue.trim().toUpperCase();
+      const errorElement = document.getElementById('settAuthorizedIdErr');
+      
+      /* Clear previous error */
+      errorElement.style.display = 'none';
+      errorElement.textContent = '';
+      
+      if (!trimmedId) {
+        errorElement.textContent = '❌ Please enter an Authorized ID';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      const student = sdkLoad('students', studentId);
+      if (!student) return;
+      
+      /* Check if trying to request the same ID */
+      if (student.authorizedId === trimmedId) {
+        errorElement.textContent = '❌ This is your current ID. No change to request.';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      /* Check if ID exists in Authorized_IDs database */
+      const authorizedRecord = sdkLoad('authorizedIds', trimmedId);
+      if (!authorizedRecord) {
+        errorElement.textContent = '❌ ID not recognized. Please check for typos or contact your PE Teacher.';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      /* Check if ID is already registered by someone else */
+      const allStudents = sdkLoadAll('students') || [];
+      const allTeachers = sdkLoadAll('teachers') || [];
+      const isDuplicate = allStudents.some(s => s.authorizedId === trimmedId && s._id !== studentId) ||
+                          allTeachers.some(t => t.authorizedId === trimmedId);
+      
+      if (isDuplicate) {
+        errorElement.textContent = '❌ This ID is already used by another user.';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      /* All validation passed - request the change */
+      const oldId = student.authorizedId;
+      requestSettingChange(studentId, 'authorizedId', trimmedId, oldId);
+      showToast(`✓ ID change requested and awaiting manager approval`);
+      updateActivityTimestamp(studentId);
+      renderStudentSettings(studentId);
     }
 
     /* =============================================
