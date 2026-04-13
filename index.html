@@ -760,9 +760,8 @@
       color: var(--text);
       font-size: 0.85rem;
       font-family: inherit;
-      transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
+      transition: border-color var(--transition), box-shadow var(--transition);
       outline: none;
-      cursor: text;
     }
 
     .form-input:focus {
@@ -3611,23 +3610,7 @@
   <!-- ============================================
        JAVASCRIPT
        ============================================ -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0"></script>
-  <script src="universal-sync.js"></script>
   <script>
-    /* =============================================
-       SUPABASE INITIALIZATION
-       ============================================= */
-    const supabaseUrl = 'https://mfmznpgvylehiszktizh.supabase.co';
-    const supabaseKey = 'sb_publishable_YA5j8n84LpO7TLwnxHQz1g_BNkL4hyL';
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-    console.log('[Supabase] Initialized:', supabaseUrl);
-
-    /* =============================================
-       UNIVERSAL SYNC INITIALIZATION
-       ============================================= */
-    const universalSync = new UniversalSupabaseSync(supabase);
-    console.log('[UniversalSync] ✅ Initialized - All data modifications will auto-sync to Supabase');
-
     /* =============================================
        DATA FORMAT DOCUMENTATION
        ============================================= 
@@ -3654,25 +3637,11 @@
       }
     }
 
-    /* Original sdkSave - wrapped by universal sync */
-    function sdkSaveOriginal(collection, id, data) {
+    function sdkSave(collection, id, data) {
       const store = sdkParseStore(collection);
       store[id] = { ...data, _id: id, _updatedAt: new Date().toISOString() };
       localStorage.setItem(collection, JSON.stringify(store));
       return store[id];
-    }
-
-    /* 🔄 WRAPPED VERSION - Auto-syncs to Supabase */
-    function sdkSave(collection, id, data) {
-      // 1. Save to localStorage first
-      const result = sdkSaveOriginal(collection, id, data);
-      
-      // 2. Queue for Supabase sync (non-blocking)
-      if (typeof universalSync !== 'undefined') {
-        universalSync.queueOperation(collection, id, data);
-      }
-      
-      return result;
     }
 
     function sdkLoad(collection, id) {
@@ -5530,55 +5499,21 @@
         classLetter: studentData.classLetter
       });
 
-      /* Try to register on Supabase */
-      try {
-        console.log('[Registration] Creating Supabase account for student:', authId);
-        const { data, error } = await supabase.auth.signUp({
-          email: email,
-          password: password,
-          options: {
-            data: {
-              first_name: finalFirstName,
-              last_name: finalLastName,
-              user_type: 'student',
-              authorized_id: authId
-            }
-          }
-        });
+      /* Save student */
+      sdkSave('students', id, studentData);
+      
+      /* Link the authorized ID to this student account */
+      linkAuthorizedId(authId, 'student', id);
+      
+      sendActivationEmail(email, uuid());
+      showToast('Account created successfully! ✓');
+      saveSession(id, 'student');
 
-        if (error) {
-          console.log('[Registration] Supabase signup failed, saving locally:', error.message);
-          // Fall back to local storage
-          sdkSave('students', id, studentData);
-          linkAuthorizedId(authId, 'student', id);
-          sendActivationEmail(email, uuid());
-          showToast('✅ Account created (local)! Please log in.');
-          saveSession(id, 'student');
-          window.registrationCameraPhotoData = null;
-          showStudentApp(id);
-          return;
-        }
+      /* Clean up camera photo data */
+      window.registrationCameraPhotoData = null;
 
-        console.log('[Registration] Supabase account created:', data.user.id);
-        // Supabase signup successful
-        sdkSave('students', id, studentData);
-        linkAuthorizedId(authId, 'student', id);
-        sendActivationEmail(email, uuid());
-        showToast('✅ Account created! Check your email to confirm.');
-        saveSession(id, 'student');
-        window.registrationCameraPhotoData = null;
-        showStudentApp(id);
-
-      } catch (err) {
-        console.error('[Registration] Unexpected error:', err);
-        // Local fallback
-        sdkSave('students', id, studentData);
-        linkAuthorizedId(authId, 'student', id);
-        showToast('✅ Account created (local backup)');
-        saveSession(id, 'student');
-        window.registrationCameraPhotoData = null;
-        showStudentApp(id);
-      }
+      /* Redirect to student app */
+      showStudentApp(id);
     });
 
     /* =============================================
@@ -5596,50 +5531,23 @@
       if (!password) { showError('slPasswordErr'); valid = false; }
       if (!valid) return;
 
-      // Try Supabase first
-      try {
-        console.log('[Login] Attempting Supabase auth for student:', studentId);
-        
-        // First find student locally to get their email
-        const matches = sdkQuery('students', [{ field: 'studentId', operator: 'eq', value: studentId }]);
-        if (matches.length === 0) {
-          showError('slPasswordErr');
-          return;
-        }
-        
-        const studentData = matches[0];
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: studentData.email,
-          password: password
-        });
-
-        if (error) {
-          console.log('[Login] Supabase auth failed, trying local fallback:', error.message);
-          // Fall back to local storage - use already retrieved studentData
-          const passwordOk = await verifyPassword(password, studentData.password);
-          if (!passwordOk) {
-            showError('slPasswordErr');
-            return;
-          }
-
-          saveSession(studentData._id, 'student');
-          updateActivityTimestamp(studentData._id);
-          showToast('Welcome back!');
-          showStudentApp(studentData._id);
-          return;
-        }
-
-        // Supabase login successful
-        console.log('[Login] Supabase auth successful:', data.user.id);
-        saveSession(studentData._id, 'student');
-        updateActivityTimestamp(studentData._id);
-        showToast('✅ Welcome back! (Supabase)');
-        showStudentApp(studentData._id);
-
-      } catch (err) {
-        console.error('[Login] Unexpected error:', err);
+      const matches = sdkQuery('students', [{ field: 'studentId', operator: 'eq', value: studentId }]);
+      if (matches.length === 0) {
         showError('slPasswordErr');
+        return;
       }
+
+      const student = matches[0];
+      const passwordOk = await verifyPassword(password, student.password);
+      if (!passwordOk) {
+        showError('slPasswordErr');
+        return;
+      }
+
+      saveSession(student._id, 'student');
+      updateActivityTimestamp(student._id);
+      showToast('Welcome back!');
+      showStudentApp(student._id);
     });
 
     /* =============================================
@@ -5717,64 +5625,22 @@
         managershipRequest: null
       };
 
-      /* Try to register on Supabase */
-      try {
-        console.log('[Registration] Creating Supabase account for teacher:', authId);
-        const { data, error } = await supabase.auth.signUp({
-          email: email,
-          password: password,
-          options: {
-            data: {
-              first_name: firstName,
-              last_name: familyName,
-              user_type: 'teacher',
-              authorized_id: authId
-            }
-          }
-        });
-
-        if (error) {
-          console.log('[Registration] Supabase signup failed, saving locally:', error.message);
-          // Fall back to local storage
-          sdkSave('teachers', id, teacherData);
-          linkAuthorizedId(authId, 'teacher', id);
-          sendActivationEmail(email, uuid());
-          if (isManager) {
-            showToast('🎉 You are now the House Team Manager! (local)');
-            logAdminAction(id, 'assigned_house_team_manager', { method: 'signup_code' });
-          } else {
-            showToast('✅ Teacher account created (local)!');
-          }
-          saveSession(id, 'teacher');
-          showTeacherApp(id);
-          return;
-        }
-
-        console.log('[Registration] Supabase account created:', data.user.id);
-        // Supabase signup successful
-        sdkSave('teachers', id, teacherData);
-        linkAuthorizedId(authId, 'teacher', id);
-        sendActivationEmail(email, uuid());
-        
-        if (isManager) {
-          showToast('🎉 You are now the House Team Manager!');
-          logAdminAction(id, 'assigned_house_team_manager', { method: 'signup_code' });
-        } else {
-          showToast('✅ Teacher account created! Check your email to confirm.');
-        }
-        
-        saveSession(id, 'teacher');
-        showTeacherApp(id);
-
-      } catch (err) {
-        console.error('[Registration] Unexpected error:', err);
-        // Local fallback
-        sdkSave('teachers', id, teacherData);
-        linkAuthorizedId(authId, 'teacher', id);
-        showToast('✅ Teacher account created (local backup)');
-        saveSession(id, 'teacher');
-        showTeacherApp(id);
+      sdkSave('teachers', id, teacherData);
+      
+      /* Link the authorized ID to this teacher account */
+      linkAuthorizedId(authId, 'teacher', id);
+      
+      sendActivationEmail(email, uuid());
+      
+      if (isManager) {
+        showToast('🎉 You are now the House Team Manager!');
+        logAdminAction(id, 'assigned_house_team_manager', { method: 'signup_code' });
+      } else {
+        showToast('Teacher account created successfully!');
       }
+      
+      saveSession(id, 'teacher');
+      showTeacherApp(id);
     });
 
     /* =============================================
@@ -5792,48 +5658,22 @@
       if (!password) { showError('tlPasswordErr'); valid = false; }
       if (!valid) return;
 
-      // Try Supabase first
-      try {
-        console.log('[Login] Attempting Supabase auth for teacher:', teacherId);
-        
-        // First find teacher locally to get their email
-        const matches = sdkQuery('teachers', [{ field: 'teacherId', operator: 'eq', value: teacherId }]);
-        if (matches.length === 0) {
-          showError('tlPasswordErr');
-          return;
-        }
-        
-        const teacherData = matches[0];
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: teacherData.email,
-          password: password
-        });
-
-        if (error) {
-          console.log('[Login] Supabase auth failed, trying local fallback:', error.message);
-          // Fall back to local storage - use already retrieved teacherData
-          const passwordOk = await verifyPassword(password, teacherData.password);
-          if (!passwordOk) {
-            showError('tlPasswordErr');
-            return;
-          }
-
-          saveSession(teacherData._id, 'teacher');
-          showToast('Welcome back!');
-          showTeacherApp(teacherData._id);
-          return;
-        }
-
-        // Supabase login successful
-        console.log('[Login] Supabase auth successful:', data.user.id);
-        saveSession(teacherData._id, 'teacher');
-        showToast('✅ Welcome back! (Supabase)');
-        showTeacherApp(teacherData._id);
-
-      } catch (err) {
-        console.error('[Login] Unexpected error:', err);
+      const matches = sdkQuery('teachers', [{ field: 'teacherId', operator: 'eq', value: teacherId }]);
+      if (matches.length === 0) {
         showError('tlPasswordErr');
+        return;
       }
+
+      const teacher = matches[0];
+      const passwordOk = await verifyPassword(password, teacher.password);
+      if (!passwordOk) {
+        showError('tlPasswordErr');
+        return;
+      }
+
+      saveSession(teacher._id, 'teacher');
+      showToast('Welcome back!');
+      showTeacherApp(teacher._id);
     });
 
     /* =============================================
@@ -8148,29 +7988,27 @@
 
       /* Ring style based on level - with glow progression */
       const ring = document.getElementById('avatarRingBorder');
-      if (ring) {
-        ring.className = 'ring';
-        ring.style.color = getHouseColor(student.house);
-        ring.style.borderColor = getHouseColor(student.house);
-        
-        /* Glow intensifies with level milestones */
-        if (level >= 40) {
-          ring.classList.add('level-legendary');
-          ring.style.boxShadow = `0 0 20px ${getHouseColor(student.house)}`;
-        } else if (level >= 30) {
-          ring.classList.add('level-elite');
-          ring.style.boxShadow = `0 0 16px ${getHouseColor(student.house)}`;
-        } else if (level >= 20) {
-          ring.classList.add('level-strong');
-          ring.style.boxShadow = `0 0 12px ${getHouseColor(student.house)}`;
-        } else if (level >= 10) {
-          ring.classList.add('level-glow');
-          ring.style.boxShadow = `0 0 8px ${getHouseColor(student.house)}`;
-        } else {
-          ring.classList.add('level-basic');
-          ring.style.borderColor = '#999';
-          ring.style.color = '#999';
-        }
+      ring.className = 'ring';
+      ring.style.color = getHouseColor(student.house);
+      ring.style.borderColor = getHouseColor(student.house);
+
+      /* Glow intensifies with level milestones */
+      if (level >= 40) {
+        ring.classList.add('level-legendary');
+        ring.style.boxShadow = `0 0 20px ${getHouseColor(student.house)}`;
+      } else if (level >= 30) {
+        ring.classList.add('level-elite');
+        ring.style.boxShadow = `0 0 16px ${getHouseColor(student.house)}`;
+      } else if (level >= 20) {
+        ring.classList.add('level-strong');
+        ring.style.boxShadow = `0 0 12px ${getHouseColor(student.house)}`;
+      } else if (level >= 10) {
+        ring.classList.add('level-glow');
+        ring.style.boxShadow = `0 0 8px ${getHouseColor(student.house)}`;
+      } else {
+        ring.classList.add('level-basic');
+        ring.style.borderColor = '#999';
+        ring.style.color = '#999';
       }
 
       /* Achievement badges */
