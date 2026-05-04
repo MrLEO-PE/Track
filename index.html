@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -255,6 +256,11 @@
     @keyframes avatarPulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.7; }
+    }
+
+    @keyframes floatingUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-100px); }
     }
 
     /* =============================================
@@ -5726,6 +5732,43 @@
             renderSportsGrid(currentStudentId);
           }
         }
+        if (e.key === 'skillDefinitionsSync') {
+          try {
+            const payload = JSON.parse(e.newValue || '{}');
+            console.log('[Student App] Detected Skill Definitions change from teacher:', payload);
+            if (payload.defKey && currentStudentId) {
+              const student = sdkLoad('students', currentStudentId);
+              const [ks, sportKey] = payload.defKey.split('_');
+              if (student && student.keyStage === ks && sportKey === currentSportKey) {
+                refreshCurrentSportView();
+              }
+            }
+          } catch (err) {
+            console.error('[Student App] Failed to parse skillDefinitionsSync payload', err);
+          }
+        }
+        if (e.key && e.key.startsWith('hpUpdate_')) {
+          try {
+            const payload = JSON.parse(e.newValue || '{}');
+            if (payload.studentId === currentStudentId) {
+              console.log('[Student App] HP Update detected:', payload);
+              const student = sdkLoad('students', currentStudentId);
+              if (student) {
+                document.getElementById('profileHP').textContent = student.housePoints || 0;
+                const sign = payload.hpAdded > 0 ? '+' : '';
+                showToast(`🎉 ${sign}${payload.hpAdded} HP from teacher assessment!`);
+                /* Animate HP change */
+                animateHPChange(currentStudentId, payload.hpAdded);
+                /* Refresh skill overview if currently viewing */
+                if (currentSportKey && document.getElementById('lessonContentView').style.display !== 'none' && currentLessonNumber === 'skills') {
+                  renderSkillsOverview(currentSportKey);
+                }
+              }
+            }
+          } catch (err) {
+            console.error('[Student App] Failed to parse hpUpdate payload', err);
+          }
+        }
       });
 
       /* Periodic activity tracking (every 5 minutes) */
@@ -5737,6 +5780,29 @@
           updateActivityTimestamp(currentStudentId);
         }
       }, 5 * 60 * 1000);
+
+      /* Real-time HP update listener (same tab/window) */
+      window.addEventListener('studentHPUpdated', function(e) {
+        const { studentId, hpAdded } = e.detail || {};
+        if (studentId === currentStudentId && currentStudentId) {
+          console.log('[Student App] Real-time HP update:', hpAdded);
+          const student = sdkLoad('students', currentStudentId);
+          if (student && document.getElementById('profileHP')) {
+            document.getElementById('profileHP').textContent = student.housePoints || 0;
+            showToast(`🎉 You earned ${hpAdded} HP!`);
+          }
+        }
+      });
+
+      /* Real-time Assessment update listener (same tab/window) */
+      window.addEventListener('studentAssessmentUpdated', function(e) {
+        const { studentId, sportKey } = e.detail || {};
+        if (studentId === currentStudentId && sportKey === currentSportKey && document.getElementById('lessonContentTitle').textContent.includes('Skills Overview')) {
+          console.log('[Student App] Assessment updated for', sportKey);
+          renderSkillsOverview(currentSportKey);
+          showToast('📊 Teacher assessment received!');
+        }
+      });
     }
 
     let currentTeacherId = null;
@@ -6632,7 +6698,7 @@
       function buildSkillDefFormHTML(data) {
         let h = '<div class="skill-def-form">';
         SKILL_SLOTS.forEach(slot => {
-          const skill = data ? (data[slot] || {}) : {};
+          const skill = data ? hydrateSkillSlotData(data, slot) : {};
           h += `<div class="skill-slot">
             <h4>${SKILL_LABELS[slot]}</h4>
             <div class="form-group">
@@ -6656,22 +6722,36 @@
         document.getElementById('sdSaveBtn').addEventListener('click', function() {
           const data = { keyStage: ks, sportKey: sport };
           let allFilled = true;
+          const skills = [];
           SKILL_SLOTS.forEach(slot => {
             data[slot] = {};
             const nameVal = document.getElementById(`sd_${slot}_name`).value.trim();
             if (!nameVal) allFilled = false;
             data[slot].name = nameVal;
+            const levelDescriptions = [];
+
             LEVELS.forEach(lv => {
               const lvVal = document.getElementById(`sd_${slot}_${lv}`).value.trim();
               if (!lvVal) allFilled = false;
               data[slot][lv] = lvVal;
+              levelDescriptions.push(lvVal);
+            });
+
+            skills.push({
+              slot,
+              name: data[slot].name,
+              type: slot.startsWith('motor') ? 'Motor' : slot === 'methodological' ? 'Methodological' : 'Social',
+              levelDescriptions
             });
           });
+
           if (!allFilled) {
             showToast('Please fill in all 25 fields (5 skill names + 4 levels each).');
             return;
           }
+          data.skills = skills;
           sdkSave('skillDefinitions', defKey, data);
+          notifySkillDefinitionsUpdate(defKey);
           showToast('Skill definitions saved!');
         });
       }
@@ -7167,6 +7247,123 @@
       document.getElementById('baSportSelect').addEventListener('change', () => applyBulkAssessmentFilters());
     }
 
+    function calculateClassCompetencyStats(classGrade, sportKey, skills) {
+      /* Calculate distribution of skill levels across all students in the class */
+      const allStudents = sdkLoadAll('students') || [];
+      const classStudents = allStudents.filter(s => s.classGrade === classGrade);
+      
+      // Initialize stats for each skill
+      const stats = {};
+      skills.forEach(skill => {
+        stats[skill.name] = { 1: 0, 2: 0, 3: 0, 4: 0, total: 0 };
+      });
+      
+      // Count levels for each skill
+      classStudents.forEach(student => {
+        const compositeId = `${student._id}_${sportKey}_teacher`;
+        const assessment = sdkLoad('assessments', compositeId);
+        
+        if (assessment && assessment.skills) {
+          assessment.skills.forEach(skillData => {
+            const skillName = skillData.name;
+            if (stats[skillName]) {
+              const level = skillData.level || 0;
+              if (level >= 1 && level <= 4) {
+                stats[skillName][level]++;
+              }
+              stats[skillName].total++;
+            }
+          });
+        }
+      });
+      
+      return { stats, classStudents };
+    }
+
+    function renderClassCompetencyBreakdown(classGrade, sportKey, skills) {
+      /* Create animated stats cards for class competency */
+      const { stats, classStudents } = calculateClassCompetencyStats(classGrade, sportKey, skills);
+      
+      const colors = ['#ff4444', '#ffb700', '#90ee90', '#228b22']; /* Red, Yellow, Light Green, Deep Green */
+      const levelNames = ['Beginner', 'Explorer', 'Performer', 'Champion'];
+      
+      let html = `<div style="margin-bottom:20px;padding:16px;background:linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);border-radius:12px;border:2px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h3 style="color:var(--text);margin:0;font-size:1.1rem;">📊 Class Competency Breakdown</h3>
+          <span style="font-size:0.85rem;color:var(--text-2);">Total: <strong style="color:var(--accent);">${classStudents.length}</strong> students</span>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;">`;
+      
+      skills.forEach(skill => {
+        const skillStats = stats[skill.name];
+        const total = classStudents.length;
+        const hasNoChampions = skillStats[4] === 0;
+        const warningBg = hasNoChampions ? 'rgba(255, 100, 100, 0.15)' : 'transparent';
+        const warningBorder = hasNoChampions ? '2px solid rgba(255, 100, 100, 0.5)' : '1px solid var(--border)';
+        
+        html += `<div style="background:var(--surface-2);padding:14px;border-radius:10px;border:${warningBorder};transition:all 0.3s ease;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h4 style="color:var(--text);margin:0;font-size:0.95rem;">${skill.name}</h4>
+            ${hasNoChampions ? '<span style="font-size:0.7rem;background:#ff6464;color:#fff;padding:2px 6px;border-radius:3px;font-weight:600;">⚠️ No Level 4</span>' : ''}
+          </div>
+          
+          <div style="display:flex;flex-direction:column;gap:8px;">`;
+        
+        // Build level breakdown bars
+        [1, 2, 3, 4].forEach(level => {
+          const count = skillStats[level];
+          const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+          const barColor = colors[level - 1];
+          const barWidth = Math.max(percentage, 5); // Min 5% for visibility
+          
+          html += `<div style="font-size:0.8rem;color:var(--text-2);display:flex;align-items:center;gap:8px;">
+            <span style="min-width:50px;font-weight:600;">${levelNames[level - 1]}:</span>
+            <div style="flex:1;height:20px;background:var(--surface);border-radius:4px;overflow:hidden;border:1px solid var(--border);">
+              <div style="height:100%;background:${barColor};width:${barWidth}%;transition:width 0.3s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;">
+                ${percentage > 15 ? `<span style="color:#fff;font-size:0.7rem;font-weight:700;">${percentage}%</span>` : ''}
+              </div>
+            </div>
+            <span style="min-width:40px;text-align:right;font-weight:600;">${count}/${total}</span>
+          </div>`;
+        });
+        
+        html += `</div>
+        </div>`;
+      });
+      
+      html += `</div>
+      </div>`;
+      
+      return html;
+    }
+
+    function updateClassCompetencyStatsDisplay(year, classLetter, sportKey) {
+      /* Refresh the stats display after level changes */
+      const matrixContainer = document.getElementById('baMatrixContainer');
+      const statsContainer = matrixContainer.querySelector('#classCompetencyStatsContainer');
+      
+      if (!statsContainer) return;
+      
+      const classGrade = `Year ${year} ${classLetter}`;
+      const keystage = getKeyStage(year);
+      const defKey = `${keystage}_${sportKey}`;
+      const skillDef = sdkLoad('skillDefinitions', defKey);
+      
+      if (!skillDef) return;
+      
+      const SKILL_SLOTS = ['motor1', 'motor2', 'motor3', 'methodological', 'social'];
+      const skills = SKILL_SLOTS.map(slot => ({
+        _id: slot,
+        name: skillDef[slot]?.name || slot
+      })).filter(s => s.name && s.name.trim() !== '');
+      
+      const newStatsHtml = renderClassCompetencyBreakdown(classGrade, sportKey, skills);
+      statsContainer.innerHTML = newStatsHtml;
+      
+      console.log('[Class Stats] Updated competency breakdown', { classGrade, sportKey });
+    }
+
     function applyBulkAssessmentFilters() {
       const year = document.getElementById('baFilterYear').value;
       const classLetter = document.getElementById('baFilterClass').value;
@@ -7215,7 +7412,22 @@
       const sport = SPORTS_LIST.find(s => s.key === sportKey);
       const colors = ['#ff4444', '#ffb700', '#90ee90', '#228b22']; /* Red, Yellow, Light Green, Deep Green */
       
-      let html = `<div style="overflow-x:auto;">
+      /* Build stats section */
+      const statsHtml = renderClassCompetencyBreakdown(classGrade, sportKey, skills);
+      
+      /* Create accordion for stats with toggle */
+      let html = `
+        <div style="margin-bottom:20px;">
+          <button id="toggleStatsAccordion" style="width:100%;padding:12px;background:linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.95rem;transition:all 0.3s ease;display:flex;align-items:center;justify-content:space-between;">
+            <span>📈 Class Analytics Summary</span>
+            <span style="transform:rotate(0deg);transition:transform 0.3s ease;" id="accordionArrow">▼</span>
+          </button>
+          <div id="classCompetencyStatsContainer" style="display:none;margin-top:12px;">
+            ${statsHtml}
+          </div>
+        </div>
+      
+      <div style="overflow-x:auto;">
         <table class="bulk-assessment-table">
           <thead>
             <tr>
@@ -7278,14 +7490,27 @@
       
       <div style="margin-top:20px;padding:16px;background:var(--surface-2);border-radius:8px;">
         <p style="color:var(--text-2);margin-bottom:12px;">
-          <strong style="color:var(--text);">💡 Running Total:</strong> <span id="hpTotalPreview">0 HP</span> to be awarded
+          <strong style="color:var(--text);">💡 Running Total:</strong> <span id="hpTotalPreview">0 HP</span> to be distributed
         </p>
-        <button class="btn btn-primary" id="submitBulkBtn" style="min-height:48px;padding:12px 24px;font-weight:600;">
+        <button class="btn btn-primary" id="submitBulkBtn" style="min-height:48px;padding:12px 24px;font-weight:600;width:100%;">
           ✅ Submit Assessments & Update House Points
         </button>
       </div>`;
       
       matrixContainer.innerHTML = html;
+      
+      /* Setup accordion toggle for stats */
+      const toggleBtn = document.getElementById('toggleStatsAccordion');
+      const statsContainer = document.getElementById('classCompetencyStatsContainer');
+      const arrow = document.getElementById('accordionArrow');
+      
+      if (toggleBtn && statsContainer) {
+        toggleBtn.addEventListener('click', function() {
+          const isOpen = statsContainer.style.display !== 'none';
+          statsContainer.style.display = isOpen ? 'none' : 'block';
+          arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+      }
       
       /* Setup level button handlers */
       document.querySelectorAll('.level-btn').forEach(btn => {
@@ -7314,6 +7539,9 @@
           /* Real-time save */
           saveBulkAssessmentLevel(studentId, sportKey, skillName, level);
           updateHPPreview();
+          
+          /* Real-time update class statistics */
+          updateClassCompetencyStatsDisplay(year, classLetter, sportKey);
         });
       });
       
@@ -7352,30 +7580,136 @@
             });
             
             updateHPPreview();
+            
+            /* Real-time update class statistics */
+            updateClassCompetencyStatsDisplay(year, classLetter, sportKey);
+            
             showToast(`✅ Set all students to Level ${level}`);
           });
         }
       });
       
       /* Submit button */
-      document.getElementById('submitBulkBtn').addEventListener('click', function() {
-        showToast('✅ All assessments saved with real-time updates!');
-      });
-      
-      /* Helper to update HP preview */
-      function updateHPPreview() {
-        let totalHP = 0;
-        document.querySelectorAll('.level-selector').forEach(selector => {
-          const activeBtn = selector.querySelector('.level-btn[style*="color: rgb(255, 255, 255)"], .level-btn[style*="color: #fff"]');
-          if (activeBtn) {
-            const level = parseInt(activeBtn.getAttribute('data-level'));
-            totalHP += level;
+      const submitBtn = document.getElementById('submitBulkBtn');
+      if (submitBtn) {
+        submitBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const year = document.getElementById('baFilterYear').value;
+          const classLtr = document.getElementById('baFilterClass').value;
+          const sport = document.getElementById('baSportSelect').value;
+          if (year && classLtr && sport) {
+            submitBulkAssessmentFinal(year, classLtr, sport);
+          } else {
+            showToast('❌ Please select Year Group, Class Letter, and Sport.');
           }
         });
-        document.getElementById('hpTotalPreview').textContent = `${totalHP} HP`;
+      }
+      
+      /* Helper to update HP preview with delta calculation */
+      function updateHPPreview() {
+        const allStudents = sdkLoadAll('students') || [];
+        const classGrade = `Year ${yearGroup} ${classLetter}`;
+        const classStudents = allStudents.filter(s => s.classGrade === classGrade);
+        
+        let totalDelta = 0;
+        let affectedStudents = 0;
+        const studentDeltas = [];
+        
+        classStudents.forEach(student => {
+          const compositeId = `${student._id}_${sportKey}_teacher`;
+          const assessment = sdkLoad('assessments', compositeId);
+          if (assessment && assessment.skills && assessment.skills.length > 0) {
+            /* Use stored previous total for accurate delta calculation */
+            const previousTotal = assessment._previousAssessmentTotal || 0;
+            const newTotal = assessment.skills.reduce((sum, s) => sum + (s.level || 0), 0);
+            const delta = newTotal - previousTotal;
+            if (newTotal > 0) {
+              totalDelta += delta;
+              affectedStudents++;
+              studentDeltas.push({
+                name: `${student.firstName} ${student.familyName}`,
+                previousTotal,
+                newTotal,
+                delta
+              });
+            }
+          }
+        });
+        
+        const sign = totalDelta > 0 ? '+' : '';
+        document.getElementById('hpTotalPreview').textContent = `${sign}${totalDelta} HP to distribute (${affectedStudents} students)`;
       }
       
       updateHPPreview();
+    }
+
+    /**
+     * UPSERT: Ensures only ONE assessment record per student + sport
+     * Finds ANY existing assessment for this student/sport and consolidates into ONE record
+     */
+    function upsertBulkAssessment(studentId, sportKey, skillsData) {
+      const student = sdkLoad('students', studentId);
+      if (!student) return null;
+      
+      // Standard composite ID (single source of truth)
+      const standardId = `${studentId}_${sportKey}_teacher`;
+      
+      // First, find if ANY assessment exists for this student+sport (regardless of ID format)
+      let existingAssessment = null;
+      let existingId = null;
+      let assessmentStore = sdkParseStore('assessments');
+      
+      // Search through all assessments to find matching student + sport combo
+      for (const [id, doc] of Object.entries(assessmentStore)) {
+        if (doc.studentId === studentId && doc.sportKey === sportKey && doc.source === 'teacher') {
+          existingAssessment = doc;
+          existingId = id;
+          console.log(`[Upsert] Found existing assessment with ID: ${id} (will migrate to ${standardId})`);
+          break;
+        }
+      }
+      
+      // Get previous total from existing assessment (if any)
+      let previousTotal = 0;
+      if (existingAssessment && existingAssessment.skills) {
+        previousTotal = existingAssessment.skills.reduce((sum, s) => sum + (s.level || 0), 0);
+      }
+      
+      // Create/update the assessment with STANDARD ID
+      let assessment = existingAssessment || {
+        _id: standardId,
+        studentId: studentId,
+        sportKey: sportKey,
+        lessonNum: 10,
+        source: 'teacher',
+        skills: [],
+        _previousAssessmentTotal: 0,
+        _currentAssessmentTotal: 0
+      };
+      
+      // Update skills data
+      assessment.skills = skillsData;
+      assessment._previousAssessmentTotal = previousTotal;
+      assessment._currentAssessmentTotal = skillsData.reduce((sum, s) => sum + (s.level || 0), 0);
+      assessment.updatedAt = new Date().toISOString();
+      
+      // Save to standard ID
+      console.log(`[Upsert] Saving assessment to ${standardId}:`, {
+        studentId,
+        sportKey,
+        skillCount: skillsData.length,
+        previousTotal,
+        newTotal: assessment._currentAssessmentTotal
+      });
+      sdkSave('assessments', standardId, assessment);
+      
+      // Clean up old format assessments if they exist
+      if (existingId && existingId !== standardId) {
+        console.log(`[Upsert] Cleaning up old assessment record: ${existingId}`);
+        sdkDelete('assessments', existingId);
+      }
+      
+      return assessment;
     }
 
     function saveBulkAssessmentLevel(studentId, sportKey, skillName, level) {
@@ -7385,20 +7719,23 @@
       const sport = SPORTS_LIST.find(s => s.key === sportKey);
       if (!sport) return;
       
-      /* Composite ID for teacher assessment */
+      /* Load current assessment state */
       const compositeId = `${studentId}_${sportKey}_teacher`;
-      let assessment = sdkLoad('assessments', compositeId) || {
-        _id: compositeId,
-        studentId: studentId,
-        sportKey: sportKey,
-        lessonNum: 10,
-        source: 'teacher',
-        skills: [],
-        submittedAt: new Date().toISOString()
-      };
+      let assessment = sdkLoad('assessments', compositeId);
       
-      /* Get previous HP value for this sport assessment */
-      const previousTotal = assessment.skills.reduce((sum, s) => sum + (s.level || 0), 0);
+      /* Initialize if doesn't exist */
+      if (!assessment) {
+        assessment = {
+          _id: compositeId,
+          studentId: studentId,
+          sportKey: sportKey,
+          lessonNum: 10,
+          source: 'teacher',
+          skills: [],
+          _previousAssessmentTotal: 0,
+          _currentAssessmentTotal: 0
+        };
+      }
       
       /* Update or add skill */
       const existingSkillIdx = assessment.skills.findIndex(s => s.name === skillName);
@@ -7412,18 +7749,256 @@
         });
       }
       
-      /* Save assessment */
-      sdkSave('assessments', compositeId, assessment);
-      
-      /* Calculate new total HP for this assessment */
-      const newTotal = assessment.skills.reduce((sum, s) => sum + (s.level || 0), 0);
-      const hpDifference = newTotal - previousTotal;
-      
-      /* Update student house points by difference only */
-      if (hpDifference !== 0) {
-        student.housePoints = (student.housePoints || 0) + hpDifference;
-        sdkSave('students', studentId, student);
+      /* Upsert to ensure only ONE record exists */
+      upsertBulkAssessment(studentId, sportKey, assessment.skills);
+    }
+
+    function getOldAssessmentTotalForSport(studentId, sportKey) {
+      const compositeId = `${studentId}_${sportKey}_teacher`;
+      const oldAssessment = sdkLoad('assessments', compositeId);
+      if (!oldAssessment || !oldAssessment.skills) return 0;
+      return oldAssessment.skills.reduce((sum, s) => sum + (s.level || 0), 0);
+    }
+
+    function calculateAssessmentDelta(studentId, sportKey, newSkills) {
+      const oldTotal = getOldAssessmentTotalForSport(studentId, sportKey);
+      const newTotal = newSkills.reduce((sum, s) => sum + (s.level || 0), 0);
+      return newTotal - oldTotal;
+    }
+
+    function animateHPChange(studentId, delta) {
+      if (delta === 0) return;
+      const sign = delta > 0 ? '+' : '';
+      const color = delta > 0 ? '#00D9A1' : '#FF6A00';
+      const floatingText = `<div style="position:fixed;pointer-events:none;font-weight:700;font-size:1.2rem;color:${color};text-shadow:0 1px 3px rgba(0,0,0,0.3);animation:floatingUp 2s ease-out forwards;z-index:9999;">${sign}${delta} HP</div>`;
+      const temp = document.createElement('div');
+      temp.innerHTML = floatingText;
+      document.body.appendChild(temp.firstChild);
+      const el = temp.firstChild;
+      el.style.left = Math.random() * window.innerWidth + 'px';
+      el.style.top = window.innerHeight * 0.5 + 'px';
+      setTimeout(() => el.remove(), 2000);
+    }
+
+    function notifyStudentHPUpdate(studentId, hpAdded) {
+      const payload = JSON.stringify({ studentId, hpAdded, timestamp: new Date().toISOString() });
+      localStorage.setItem(`hpUpdate_${studentId}`, payload);
+      window.dispatchEvent(new CustomEvent('studentHPUpdated', { detail: { studentId, hpAdded } }));
+    }
+
+    function submitBulkAssessmentFinal(yearGroup, classLetter, sportKey) {
+      try {
+        /* Get values from DOM if not passed as parameters */
+        if (!yearGroup) yearGroup = document.getElementById('baFilterYear').value;
+        if (!classLetter) classLetter = document.getElementById('baFilterClass').value;
+        if (!sportKey) sportKey = document.getElementById('baSportSelect').value;
+        
+        if (!yearGroup || !classLetter || !sportKey) {
+          console.error('[Bulk Assessment Submit] Missing parameters', { yearGroup, classLetter, sportKey });
+          showToast('❌ Please select Year Group, Class Letter, and Sport.');
+          return;
+        }
+        
+        /* Set loading state */
+        const submitBtn = document.getElementById('submitBulkBtn');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = '⏳ Saving Assessments...';
+        }
+        
+        const classGrade = `Year ${yearGroup} ${classLetter}`;
+        const sport = SPORTS_LIST.find(s => s.key === sportKey);
+        const sportName = sport?.name || sportKey;
+        
+        const allStudents = sdkLoadAll('students') || [];
+        const classStudents = allStudents.filter(s => s.classGrade === classGrade);
+        
+        if (classStudents.length === 0) {
+          throw new Error(`No students found in class ${classGrade}`);
+        }
+        
+        let totalHPDelta = 0;
+        let studentsAwarded = 0;
+        let studentsProcessed = 0;
+        let recordsConsolidated = 0;
+        const skillDistribution = {};
+        const hpDeltaPerStudent = {};
+        
+        /* Apply delta HP to each student using UPSERT */
+        classStudents.forEach(student => {
+          const standardCompositeId = `${student._id}_${sportKey}_teacher`;
+          
+          // Check if current assessment exists (before upsert)
+          let tempAssessment = sdkLoad('assessments', standardCompositeId);
+          let wasConsolidated = false;
+          
+          if (!tempAssessment) {
+            // Look for legacy format records to consolidate
+            let assessmentStore = sdkParseStore('assessments');
+            for (const [id, doc] of Object.entries(assessmentStore)) {
+              if (doc.studentId === student._id && doc.sportKey === sportKey && doc.source === 'teacher' && id !== standardCompositeId) {
+                recordsConsolidated++;
+                wasConsolidated = true;
+                console.log(`[Consolidation] Will migrate ${id} → ${standardCompositeId}`);
+                break;
+              }
+            }
+          }
+          
+          // Try to load the assessment
+          const assessment = sdkLoad('assessments', standardCompositeId);
+          
+          if (assessment && assessment.skills && assessment.skills.length > 0) {
+            studentsProcessed++;
+            
+            /* Use stored previous total for accurate delta calculation */
+            const previousTotal = assessment._previousAssessmentTotal || 0;
+            const newTotal = assessment.skills.reduce((sum, s) => sum + (s.level || 0), 0);
+            const delta = newTotal - previousTotal;
+            
+            console.log(`[Bulk Assessment] Student: ${student.firstName} ${student.familyName}, Previous Total: ${previousTotal}, New Total: ${newTotal}, Delta: ${delta}`);
+            hpDeltaPerStudent[student._id] = { previousTotal, newTotal, delta };
+
+            /* Apply delta only if there's a change */
+            if (delta !== 0 || !assessment.appliedAt) {
+              const updatedStudent = sdkLoad('students', student._id);
+              const oldHP = updatedStudent.housePoints || 0;
+              updatedStudent.housePoints = oldHP + delta;
+              sdkSave('students', student._id, updatedStudent);
+              
+              console.log(`[Bulk Assessment HP Update] ${student.firstName} ${student.familyName}: ${oldHP} HP → ${updatedStudent.housePoints} HP (${delta > 0 ? '+' : ''}${delta})`);
+              
+              /* Mark as applied */
+              assessment.appliedAt = new Date().toISOString();
+              
+              /* Convert skills to skillRatings format for UI display */
+              if (!assessment.skillRatings || assessment.skillRatings.length === 0) {
+                assessment.skillRatings = assessment.skills.map(skill => ({
+                  name: skill.name,
+                  level: skill.level,
+                  points: skill.level,
+                  levelName: ['', 'Developing', 'Competent', 'Proficient', 'Expert'][skill.level] || 'Unknown'
+                }));
+              }
+              
+              /* Update the stored previous total for next submission */
+              assessment._previousAssessmentTotal = newTotal;
+              
+              /* UPSERT to ensure only ONE record per student+sport */
+              upsertBulkAssessment(student._id, sportKey, assessment.skills);
+              
+              totalHPDelta += delta;
+              if (newTotal > 0) studentsAwarded++;
+              
+              /* Notify student of HP update */
+              if (delta !== 0) notifyStudentHPUpdate(student._id, delta);
+            }
+            
+            /* Track skill distribution */
+            assessment.skills.forEach(skill => {
+              skillDistribution[skill.name] = skillDistribution[skill.name] || { 1: 0, 2: 0, 3: 0, 4: 0 };
+              skillDistribution[skill.name][skill.level || 0]++;
+            });
+          }
+        });
+        
+        console.log('[Bulk Assessment Submit Success]', {
+          classGrade,
+          yearGroup,
+          classLetter,
+          sportKey,
+          classSize: classStudents.length,
+          studentsProcessed,
+          studentsAwarded,
+          recordsConsolidated,
+          totalHPDelta,
+          skillDistribution,
+          deltaPerStudent: hpDeltaPerStudent
+        });
+        
+        /* Restore button state */
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '✅ Submit Assessments & Update House Points';
+        }
+        
+        const sign = totalHPDelta > 0 ? '+' : '';
+        const consolidationMsg = recordsConsolidated > 0 ? ` (${recordsConsolidated} duplicate records cleaned up)` : '';
+        showToast(`🎉 Assessment for ${sportName} updated. Existing records have been synchronized.${consolidationMsg}\n${sign}${totalHPDelta} House Points distributed to ${studentsAwarded} ${studentsAwarded === 1 ? 'student' : 'students'}.`);
+        
+        /* Refresh the matrix and overview */
+        applyBulkAssessmentFilters();
+        renderSkillDistributionOverview(yearGroup, classLetter, sportKey);
+        
+      } catch (error) {
+        console.error('[Bulk Assessment Submit Error]', error, {
+          yearGroup,
+          classLetter,
+          sportKey,
+          errorMessage: error.message,
+          errorStack: error.stack
+        });
+        
+        /* Restore button state */
+        const submitBtn = document.getElementById('submitBulkBtn');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '❌ Error - Try Again';
+          setTimeout(() => {
+            submitBtn.textContent = '✅ Submit Assessments & Update House Points';
+          }, 3000);
+        }
+        
+        showToast('❌ Update failed. Please check your connection and try again.');
       }
+    }
+
+    function renderSkillDistributionOverview(yearGroup, classLetter, sportKey) {
+      const classGrade = `Year ${yearGroup} ${classLetter}`;
+      const allStudents = sdkLoadAll('students') || [];
+      const classStudents = allStudents.filter(s => s.classGrade === classGrade);
+      const skillDistribution = {};
+      const levelNames = ['', 'Beginner', 'Explorer', 'Performer', 'Champion'];
+      const levelColors = ['', '#FF6B6B', '#FFA500', '#4CAF50', '#667EEA'];
+      
+      classStudents.forEach(student => {
+        const compositeId = `${student._id}_${sportKey}_teacher`;
+        const assessment = sdkLoad('assessments', compositeId);
+        if (assessment && assessment.skills) {
+          assessment.skills.forEach(skill => {
+            if (!skillDistribution[skill.name]) {
+              skillDistribution[skill.name] = { 1: 0, 2: 0, 3: 0, 4: 0 };
+            }
+            skillDistribution[skill.name][skill.level]++;
+          });
+        }
+      });
+      
+      const matrixContainer = document.getElementById('baMatrixContainer');
+      if (!matrixContainer) return;
+      
+      let html = `<div style="margin-top:24px;padding:16px;background:var(--surface-2);border-radius:8px;">
+        <h4 style="margin-bottom:16px;color:var(--text);">📊 Level Distribution Across Class</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">`;
+      
+      Object.keys(skillDistribution).forEach(skillName => {
+        const dist = skillDistribution[skillName];
+        html += `<div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;">
+          <div style="font-weight:600;margin-bottom:8px;color:var(--text);font-size:0.95rem;">${skillName}</div>`;
+        
+        for (let level = 1; level <= 4; level++) {
+          const count = dist[level] || 0;
+          html += `<div style="font-size:0.8rem;margin-bottom:4px;display:flex;align-items:center;">
+            <span style="display:inline-block;width:12px;height:12px;background:${levelColors[level]};border-radius:2px;margin-right:6px;"></span>
+            <span style="flex:1;">${levelNames[level]}</span>
+            <span style="font-weight:600;color:var(--text);">${count}</span>
+          </div>`;
+        }
+        html += `</div>`;
+      });
+      
+      html += `</div></div>`;
+      matrixContainer.innerHTML += html;
     }
 
     /* =============================================
@@ -7935,6 +8510,21 @@
     function renderStudentDashboard(studentId) {
       const student = sdkLoad('students', studentId);
       if (!student) return;
+
+      /* Check for pending HP updates from bulk assessment */
+      const hpUpdateKey = `hpUpdate_${studentId}`;
+      const pendingUpdate = localStorage.getItem(hpUpdateKey);
+      if (pendingUpdate) {
+        try {
+          const update = JSON.parse(pendingUpdate);
+          const sign = update.hpAdded > 0 ? '+' : '';
+          const color = update.hpAdded > 0 ? '✅' : '⚠️';
+          showToast(`${color} Teacher Assessment Complete! ${sign}${update.hpAdded} House Points awarded.`);
+          localStorage.removeItem(hpUpdateKey);
+        } catch (e) {
+          console.error('Error parsing pending HP update:', e);
+        }
+      }
 
       const fullName = `${student.firstName} ${student.familyName}`;
       const xp = student.xp || 0;
@@ -8608,10 +9198,93 @@
 
     let currentStudentId = null;
     let currentSportKey = null;
+    let currentLessonNumber = null;
     let skillsChartInstance = null;
     let currentHistoryQuestion = 0;
     let historyQuizScore = 0;
     let historyQuizAnswered = [];
+
+    function normalizeSkillDefinitions(raw) {
+      if (!raw) return null;
+      if (raw.skills && Array.isArray(raw.skills)) return raw;
+      const SKILL_SLOTS = ['motor1', 'motor2', 'motor3', 'methodological', 'social'];
+      const SKILL_LABELS = {
+        motor1: 'Motor Skill 1',
+        motor2: 'Motor Skill 2',
+        motor3: 'Motor Skill 3',
+        methodological: 'Methodological',
+        social: 'Social'
+      };
+      const LEVELS = ['level1', 'level2', 'level3', 'level4'];
+      const skills = SKILL_SLOTS.map(slot => {
+        const skill = raw[slot] || {};
+        return {
+          slot,
+          name: skill.name || SKILL_LABELS[slot],
+          type: slot.startsWith('motor') ? 'Motor' : slot === 'methodological' ? 'Methodological' : 'Social',
+          levelDescriptions: LEVELS.map(level => skill[level] || ''),
+          raw: skill
+        };
+      });
+      return { ...raw, skills };
+    }
+
+    function getCurrentSportDefinitions(student, sportKey) {
+      if (!student || !sportKey) return null;
+      const defKey = `${student.keyStage}_${sportKey}`;
+      const raw = sdkLoad('skillDefinitions', defKey);
+      const normalized = normalizeSkillDefinitions(raw);
+      window.currentSportDefinitions = normalized;
+      if (normalized) {
+        console.log('[Data Loaded] currentSportDefinitions loaded', defKey, normalized);
+      } else {
+        console.log('[Data Loaded] currentSportDefinitions missing', defKey);
+      }
+      return normalized;
+    }
+
+    function notifySkillDefinitionsUpdate(defKey) {
+      const payload = JSON.stringify({ defKey, updatedAt: new Date().toISOString() });
+      localStorage.setItem('skillDefinitionsSync', payload);
+      window.dispatchEvent(new CustomEvent('skillDefinitionsUpdated', { detail: { defKey, updatedAt: new Date().toISOString() } }));
+    }
+
+    function getSportStatusForStudent(student, sportKey) {
+      if (!student || !sportKey) return 'Inactive';
+      const classInfo = parseClassGrade(student.classGrade);
+      if (!classInfo.yearGroup || !classInfo.classLetter) return 'Inactive';
+      const classKey = `class_${classInfo.yearGroup}${classInfo.classLetter}`;
+      const classConfig = sdkLoad('classSportsActive', classKey);
+      const activeSports = classConfig?.activeSports || [];
+      return activeSports.includes(sportKey) ? 'Active' : 'Inactive';
+    }
+
+    function hydrateSkillSlotData(definition, slot) {
+      if (!definition) return {};
+      if (definition[slot]) return definition[slot];
+      if (Array.isArray(definition.skills)) {
+        const skill = definition.skills.find(s => s.slot === slot);
+        if (skill) {
+          return {
+            name: skill.name || '',
+            level1: skill.levelDescriptions?.[0] || '',
+            level2: skill.levelDescriptions?.[1] || '',
+            level3: skill.levelDescriptions?.[2] || '',
+            level4: skill.levelDescriptions?.[3] || ''
+          };
+        }
+      }
+      return {};
+    }
+
+    function refreshCurrentSportView() {
+      if (!currentSportKey) return;
+      if (document.getElementById('lessonContentView').style.display !== 'none' && currentLessonNumber !== null) {
+        openLesson(currentSportKey, currentLessonNumber);
+      } else if (document.getElementById('sportDetailView').style.display !== 'none') {
+        renderLessonGrid(currentSportKey);
+      }
+    }
 
     /* =============================================
        SPORT HISTORY DATA
@@ -9097,8 +9770,14 @@
     /* ---- openSportDetail ---- */
     function openSportDetail(sportKey) {
       currentSportKey = sportKey;
+      currentLessonNumber = null;
       const sport = SPORTS_LIST.find(s => s.key === sportKey);
       if (!sport) return;
+
+      const student = sdkLoad('students', currentStudentId);
+      const status = getSportStatusForStudent(student, sportKey);
+      const defs = getCurrentSportDefinitions(student, sportKey);
+      console.log('[Sport View] Loaded sport status and definitions', { sportKey, status, definitionsLoaded: !!defs });
 
       document.getElementById('sportsGridView').style.display = 'none';
       document.getElementById('sportDetailView').style.display = '';
@@ -9190,6 +9869,8 @@
 
     /* ---- openLesson ---- */
     function openLesson(sportKey, lessonNum) {
+      currentSportKey = sportKey;
+      currentLessonNumber = lessonNum;
       document.getElementById('sportDetailView').style.display = 'none';
       document.getElementById('lessonContentView').style.display = '';
 
@@ -9212,8 +9893,7 @@
 
       document.getElementById('lessonContentTitle').textContent = `Lesson ${lessonNum} — Self Assessment · ${sport.name}`;
 
-      const defKey = `${student.keyStage}_${sportKey}`;
-      const skillDef = sdkLoad('skillDefinitions', defKey);
+      const skillDef = getCurrentSportDefinitions(student, sportKey);
       const body = document.getElementById('lessonContentBody');
 
       if (!skillDef || !skillDef.skills || skillDef.skills.length === 0) {
@@ -9309,8 +9989,7 @@
       const sport = SPORTS_LIST.find(s => s.key === sportKey);
       if (!student || !sport) return;
 
-      const defKey = `${student.keyStage}_${sportKey}`;
-      const skillDef = sdkLoad('skillDefinitions', defKey);
+      const skillDef = getCurrentSportDefinitions(student, sportKey);
       if (!skillDef) return;
 
       const levelNames = ['Beginner', 'Explorer', 'Performer', 'Champion'];
@@ -9426,9 +10105,27 @@
         </div>`;
       }
 
+      const currentDefinitions = getCurrentSportDefinitions(student, sportKey);
       const body = document.getElementById('lessonContentBody');
+
+      let criteriaHtml = '';
+      if (currentDefinitions && currentDefinitions.skills && currentDefinitions.skills.length > 0) {
+        criteriaHtml = `<div class="skill-criteria-panel" style="margin-bottom:18px;padding:16px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;">
+          <h4 style="margin-bottom:12px;color:var(--text);">Skill Criteria</h4>
+          ${currentDefinitions.skills.map(skill => `
+            <div style="margin-bottom:12px;">
+              <strong style="display:block;margin-bottom:6px;">${skill.name}</strong>
+              ${skill.levelDescriptions.map((desc, idx) => `<div style="font-size:0.85rem;line-height:1.4;margin-bottom:4px;"><strong>Level ${idx + 1}:</strong> ${desc || 'No description available'}</div>`).join('')}
+            </div>
+          `).join('')}
+        </div>`;
+      } else {
+        criteriaHtml = `<div style="margin-bottom:18px;padding:16px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;color:var(--text-2);font-size:0.9rem;">Your teacher has not yet defined skill criteria for ${sport.name} at ${student.keyStage}. Ask them to update Skill Definitions.</div>`;
+      }
+
       body.innerHTML = `<div class="practice-form">
         ${previousHtml}
+        ${criteriaHtml}
         <div class="form-group">
           <label for="practTopic">Topic / Goal</label>
           <input type="text" id="practTopic" class="form-input" placeholder="What is today's topic or goal?">
@@ -9547,6 +10244,49 @@
     }
 
     /* ---- renderSkillsOverview (Step 10) ---- */
+    
+    function getProgressionTimeline(sportKey) {
+      const assessmentLessons = [1, 5, 9, 10];
+      const timeline = {};
+      assessmentLessons.forEach(ln => {
+        const compositeId = `${currentStudentId}_${sportKey}_L${ln}`;
+        const a = sdkLoad('assessments', compositeId);
+        if (a) timeline[ln] = a;
+      });
+      return timeline;
+    }
+
+    function getSkillProgressionPerLesson(sportKey, skillName) {
+      const assessmentLessons = [1, 5, 9, 10];
+      const progression = [];
+      assessmentLessons.forEach(ln => {
+        const compositeId = `${currentStudentId}_${sportKey}_L${ln}`;
+        const a = sdkLoad('assessments', compositeId);
+        if (a) {
+          const skill = (a.skillRatings || []).find(s => s.name === skillName);
+          if (skill) {
+            progression.push({ lesson: ln, level: skill.level, levelName: skill.levelName });
+          }
+        }
+      });
+      return progression;
+    }
+
+    function getLevelColor(level) {
+      const colors = {
+        1: '#FF6B6B',   // Red - Beginner
+        2: '#4ECDC4',   // Teal - Explorer
+        3: '#45B7D1',   // Blue - Performer
+        4: '#FFA500'    // Orange/Gold - Champion
+      };
+      return colors[level] || '#999';
+    }
+
+    function getLevelName(level) {
+      const names = ['', 'Beginner', 'Explorer', 'Performer', 'Champion'];
+      return names[level] || 'Unknown';
+    }
+
     function renderSkillsOverview(sportKey) {
       const sport = SPORTS_LIST.find(s => s.key === sportKey);
       const student = sdkLoad('students', currentStudentId);
@@ -9556,29 +10296,39 @@
 
       const body = document.getElementById('lessonContentBody');
 
-      // Gather all self-assessments for this sport
+      // Gather all self-assessments for this sport (Lessons 1, 5, 9, 10)
       const assessmentLessons = [1, 5, 9, 10];
       let selfAssessments = [];
       assessmentLessons.forEach(ln => {
         const compositeId = `${currentStudentId}_${sportKey}_L${ln}`;
         const a = sdkLoad('assessments', compositeId);
-        if (a && a.source !== 'teacher') selfAssessments.push(a);
+        if (a) selfAssessments.push({ ...a, lessonNum: ln });
       });
 
-      // Check for teacher assessment (lesson 10, source:'teacher')
-      const teacherCompositeId = `${currentStudentId}_${sportKey}_L10_teacher`;
-      let teacherAssessment = sdkLoad('assessments', teacherCompositeId);
-      // Also try alternate composite id format
+      // Teacher assessment - use STANDARD ID format (consolidated upsert)
+      let teacherAssessment = null;
+      const standardCompositeId = `${currentStudentId}_${sportKey}_teacher`;
+      
+      const a = sdkLoad('assessments', standardCompositeId);
+      if (a && a.source === 'teacher') {
+        teacherAssessment = a;
+        console.log('[Skill Overview] Loaded teacher assessment with standard ID:', { standardCompositeId, hasSkills: !!a.skills });
+      }
+      
+      // Fallback: If not found, search for ANY teacher assessment for this student+sport (legacy recovery)
       if (!teacherAssessment) {
-        const allAssessments = sdkLoadAll('assessments') || {};
-        for (const key in allAssessments) {
-          const a = allAssessments[key];
-          if (a && a.studentId === currentStudentId && a.sportKey === sportKey && a.lessonNum === 10 && a.source === 'teacher') {
-            teacherAssessment = a;
+        let assessmentStore = sdkParseStore('assessments');
+        for (const [id, doc] of Object.entries(assessmentStore)) {
+          if (doc.studentId === currentStudentId && doc.sportKey === sportKey && doc.source === 'teacher') {
+            teacherAssessment = doc;
+            console.log('[Skill Overview] Found teacher assessment with legacy ID (will be consolidated):', { legacyId: id });
             break;
           }
         }
       }
+
+      // Get teacher skill definitions for custom names and descriptions
+      const skillDef = getCurrentSportDefinitions(student, sportKey);
 
       if (selfAssessments.length === 0 && !teacherAssessment) {
         body.innerHTML = `<div class="empty-state">
@@ -9599,22 +10349,89 @@
         });
       });
 
-      const skillLabels = Object.keys(selfSkillMap);
-      const selfValues = skillLabels.map(k => selfSkillMap[k].points || 0);
+      let skillLabels = Object.keys(selfSkillMap);
+      let selfValues = skillLabels.map(k => selfSkillMap[k].points || 0);
 
       // Build teacher values if exists
       let teacherValues = [];
       let teacherSkillMap = {};
       if (teacherAssessment) {
-        (teacherAssessment.skillRatings || []).forEach(sr => {
-          teacherSkillMap[sr.name] = sr;
+        // Try skillRatings first (converted format), then fall back to skills array
+        const teacherSkillsData = teacherAssessment.skillRatings || teacherAssessment.skills || [];
+        
+        console.log('[Skill Overview] Teacher Assessment Data:', {
+          hasSkillRatings: !!teacherAssessment.skillRatings,
+          hasSkills: !!teacherAssessment.skills,
+          skillsCount: teacherAssessment.skills ? teacherAssessment.skills.length : 0,
+          skillsData: teacherSkillsData
         });
-        teacherValues = skillLabels.map(k => teacherSkillMap[k] ? (teacherSkillMap[k].points || 0) : 0);
+        
+        teacherSkillsData.forEach(sr => {
+          // Get the skill name - handle both formats
+          const skillName = sr.name || sr.skillName;
+          const skillLevel = sr.points !== undefined ? sr.points : sr.level;
+          
+          if (skillName) {
+            teacherSkillMap[skillName] = { ...sr, name: skillName, level: skillLevel, points: skillLevel };
+          }
+        });
+        
+        /* Merge skill labels: include ALL unique skills from both student and teacher */
+        /* Important: maintain consistent order - student skills first, then new teacher skills */
+        const allTeacherSkills = Object.keys(teacherSkillMap);
+        const newTeacherSkills = allTeacherSkills.filter(s => !selfSkillMap[s]);
+        skillLabels = [...skillLabels, ...newTeacherSkills]; // Append new teacher skills to end
+        
+        /* Rebuild self values with merged skill labels (fill missing with 0) */
+        selfValues = skillLabels.map(k => {
+          if (selfSkillMap[k]) {
+            return selfSkillMap[k].points || 0;
+          }
+          return 0; // Student didn't assess this skill
+        });
+        
+        console.log('[Skill Overview] Merged Skills (Ordered):', {
+          originalSelfSkills: Object.keys(selfSkillMap),
+          newTeacherSkills: newTeacherSkills,
+          mergedSkillsOrdered: skillLabels
+        });
+        
+        // Build teacher values in the EXACT SAME ORDER as merged skill labels
+        teacherValues = skillLabels.map(k => {
+          console.log(`  Mapping skill "${k}":`, { exists: !!teacherSkillMap[k], value: teacherSkillMap[k]?.points || teacherSkillMap[k]?.level || 0 });
+          if (teacherSkillMap[k]) {
+            return teacherSkillMap[k].points !== undefined ? teacherSkillMap[k].points : teacherSkillMap[k].level || 0;
+          }
+          return 0; // Teacher didn't assess this skill
+        });
+        
+        console.log('[Skill Overview] Final Chart Data Mapping:', {
+          skillLabels,
+          selfValues,
+          teacherValues,
+          dataCount: skillLabels.length,
+          teacherDataCount: teacherValues.length
+        });
       }
 
-      // Create HTML
+      // Create HTML - Optimized layout with larger chart
       let html = '<div style="padding:12px;">';
-      html += '<div style="max-width:400px;margin:0 auto;"><canvas id="skillsRadarCanvas"></canvas></div>';
+      
+      // Larger chart area
+      html += '<div style="max-width:600px;margin:0 auto 24px auto;"><canvas id="skillsRadarCanvas"></canvas></div>';
+      
+      // Total Assessment HP Stats
+      if (teacherAssessment && teacherAssessment.skills && teacherAssessment.skills.length > 0) {
+        const totalTeacherPoints = teacherAssessment.skills.reduce((sum, s) => sum + (s.level || 0), 0);
+        const maxPoints = teacherAssessment.skills.length * 4; // Max 4 points per skill
+        html += `<div style="text-align:center;padding:12px;background:rgba(249,168,37,0.1);border-radius:8px;margin-bottom:16px;border:1px solid #F9A825;">
+          <div style="font-size:1.2rem;font-weight:700;color:var(--text);">
+            Total Assessment HP: <span style="color:#F9A825;">${totalTeacherPoints}/${maxPoints}</span>
+          </div>
+          <div style="font-size:0.85rem;color:var(--text-2);margin-top:4px;">Based on teacher's official evaluation</div>
+        </div>`;
+      }
+      
       html += '<div id="skillsDataTable"></div>';
       html += '<div id="skillsTeacherComment"></div>';
 
@@ -9634,29 +10451,51 @@
         skillsChartInstance = null;
       }
 
-      // Build datasets
+      // Build datasets with enhanced styling
+      /* CRITICAL: Validate array lengths match before creating chart */
+      console.log('[Skill Overview] Pre-Chart Validation:', {
+        skillLabelsLength: skillLabels.length,
+        selfValuesLength: selfValues.length,
+        teacherValuesLength: teacherValues.length,
+        isSync: skillLabels.length === selfValues.length && skillLabels.length === teacherValues.length
+      });
+      
+      if (skillLabels.length !== selfValues.length || skillLabels.length !== teacherValues.length) {
+        console.error('[Skill Overview] SYNC ERROR: Array lengths do not match!', {
+          skillLabels, selfValues, teacherValues
+        });
+      }
+      
       const datasets = [{
-        label: 'Self',
+        label: '📊 My Self-Reflection',
         data: selfValues,
-        backgroundColor: 'rgba(102,126,234,0.4)',
+        backgroundColor: 'rgba(102,126,234,0.2)',
         borderColor: '#667EEA',
-        borderWidth: 2,
-        pointBackgroundColor: '#667EEA'
+        borderWidth: 3,
+        pointBackgroundColor: '#667EEA',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7
       }];
 
       if (teacherAssessment && teacherValues.length > 0) {
         datasets.push({
-          label: 'Teacher',
+          label: '🏆 Teacher\'s Official Grade',
           data: teacherValues,
-          backgroundColor: 'rgba(249,168,37,0.3)',
+          backgroundColor: 'rgba(249,168,37,0.15)',
           borderColor: '#F9A825',
-          borderWidth: 2,
+          borderWidth: 3,
           borderDash: [5, 5],
-          pointBackgroundColor: '#F9A825'
+          pointBackgroundColor: '#F9A825',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 7
         });
       }
 
-      // Create radar chart
+      // Create radar chart with enhanced interactivity
       const ctx = document.getElementById('skillsRadarCanvas').getContext('2d');
       skillsChartInstance = new Chart(ctx, {
         type: 'radar',
@@ -9667,49 +10506,116 @@
         options: {
           animation: false,
           responsive: true,
+          maintainAspectRatio: true,
           scales: {
             r: {
               min: 0,
               max: 4,
-              ticks: { stepSize: 1 },
-              pointLabels: { font: { size: 11 } }
+              ticks: {
+                stepSize: 1,
+                callback: function(value) {
+                  const levelNames = ['', 'Developing', 'Competent', 'Proficient', 'Expert'];
+                  return levelNames[value] || '';
+                }
+              },
+              pointLabels: {
+                font: { size: 12, weight: 'bold' },
+                color: 'var(--text)'
+              },
+              grid: {
+                color: 'rgba(200, 200, 200, 0.1)'
+              }
             }
           },
           plugins: {
-            legend: { position: 'bottom' }
+            legend: {
+              position: 'bottom',
+              labels: {
+                font: { size: 12, weight: '600' },
+                padding: 16,
+                usePointStyle: true,
+                pointStyle: 'circle'
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleFont: { size: 13, weight: 'bold' },
+              bodyFont: { size: 12 },
+              padding: 12,
+              borderRadius: 6,
+              displayColors: true,
+              callbacks: {
+                title: function(context) {
+                  return context[0].label;
+                },
+                label: function(context) {
+                  const levelNames = ['', 'Developing', 'Competent', 'Proficient', 'Expert'];
+                  const value = context.raw;
+                  const levelName = levelNames[value] || 'Unknown';
+                  return `${context.dataset.label}: ${value} (${levelName})`;
+                },
+                afterLabel: function(context) {
+                  if (context.dataset.label.includes('Teacher')) {
+                    return `${context.raw} HP earned`;
+                  }
+                }
+              }
+            }
           }
         }
       });
 
-      // State B: data table and teacher comment
+      // State B: Only show Teacher Assessment Breakdown (no redundant table)
       if (teacherAssessment) {
         const levelNames = ['', 'Developing', 'Competent', 'Proficient', 'Expert'];
-        let tableHtml = '<table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:0.9rem;">';
-        tableHtml += '<thead><tr style="border-bottom:2px solid var(--border);">';
-        tableHtml += '<th style="text-align:left;padding:8px;">Skill</th>';
-        tableHtml += '<th style="text-align:center;padding:8px;">Student</th>';
-        tableHtml += '<th style="text-align:center;padding:8px;">Teacher</th>';
-        tableHtml += '<th style="text-align:center;padding:8px;">Points</th>';
-        tableHtml += '</tr></thead><tbody>';
-
-        skillLabels.forEach((skillName, idx) => {
-          const selfPts = selfValues[idx] || 0;
-          const teachPts = teacherValues[idx] || 0;
-          tableHtml += `<tr style="border-bottom:1px solid var(--border);">
-            <td style="padding:8px;">${skillName}</td>
-            <td style="text-align:center;padding:8px;">${levelNames[selfPts] || selfPts}</td>
-            <td style="text-align:center;padding:8px;">${levelNames[teachPts] || teachPts}</td>
-            <td style="text-align:center;padding:8px;font-weight:600;">${teachPts}</td>
-          </tr>`;
-        });
-
-        tableHtml += '</tbody></table>';
-        document.getElementById('skillsDataTable').innerHTML = tableHtml;
+        
+        /* Get the skills to display - prefer skills array, fallback to skillRatings */
+        const skillsToDisplay = teacherAssessment.skills || teacherAssessment.skillRatings || [];
+        
+        /* Add Teacher Assessment Breakdown with Individual Skill Levels */
+        let breakdownHtml = '<div style="margin-top:24px;padding:16px;background:rgba(249,168,37,0.1);border-radius:8px;border:1px solid #F9A825;">';
+        breakdownHtml += '<h4 style="margin:0 0 14px 0;color:var(--text);font-size:0.98rem;">📊 Detailed Skill Assessment</h4>';
+        
+        if (skillsToDisplay && skillsToDisplay.length > 0) {
+          breakdownHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+          skillsToDisplay.forEach(skill => {
+            const skillName = skill.name || skill.skillName;
+            const level = skill.level || skill.points || 0;
+            const levelName = levelNames[level] || 'Unassessed';
+            const colors = { 
+              0: '#999', 
+              1: '#FF6B6B', 
+              2: '#4ECDC4', 
+              3: '#45B7D1', 
+              4: '#FFA500' 
+            };
+            const color = colors[level] || '#999';
+            const levelEmoji = { 1: '🔴', 2: '🟡', 3: '🔵', 4: '⭐' }[level] || '⚪';
+            
+            breakdownHtml += `<div style="padding:10px;background:var(--surface);border-radius:6px;border-left:4px solid ${color};display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="color:var(--text);font-size:0.9rem;font-weight:500;">${skillName}</div>
+                <div style="color:var(--text-2);font-size:0.8rem;margin-top:2px;">${levelName}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;">
+                <span style="font-weight:700;color:${color};font-size:1.2rem;">${level}</span>
+                <span style="font-size:1rem;">${levelEmoji}</span>
+              </div>
+            </div>`;
+          });
+          breakdownHtml += '</div>';
+        } else {
+          breakdownHtml += '<p style="color:var(--text-2);font-size:0.85rem;margin:0;">No skills assessed yet.</p>';
+        }
+        
+        breakdownHtml += '</div>';
+        document.getElementById('skillsDataTable').innerHTML = breakdownHtml;
 
         // Teacher comment
         if (teacherAssessment.comment) {
           document.getElementById('skillsTeacherComment').innerHTML = `
-            <blockquote style="margin-top:16px;padding:12px 16px;border-left:4px solid #F9A825;background:var(--surface-2);border-radius:0 8px 8px 0;font-style:italic;">
+            <blockquote style="margin-top:16px;padding:12px 16px;border-left:4px solid #F9A825;background:var(--surface-2);border-radius:0 8px 8px 0;font-style:italic;color:var(--text-2);">
+              <strong style="color:var(--text);">Teacher's Comment:</strong><br/>
               ${teacherAssessment.comment}
             </blockquote>`;
         }
@@ -10083,7 +10989,6 @@
     let quizCurrentQuestionIndex = 0;
     let quizCurrentScore = 0;
     let quizCurrentQuestions = [];
-    let quizHardMode = false;
 
     function drawQuizPath(completedArray, currentLevel, svgEl, nodesData) {
       const svgNS = 'http://www.w3.org/2000/svg';
@@ -10275,15 +11180,13 @@
             "${topic.quote}"<br><small>\u2014 ${topic.quoteAuthor}</small>
           </div>
           <div style="display:flex;gap:12px;margin-top:20px;flex-direction:column;">
-            <button class="btn btn-primary btn-block" onclick="startQuizWithMode(${level}, false)">🎯 Normal Mode (80%+)</button>
-            <button class="btn btn-block" style="background:#E94B3C;color:white;border:none;padding:12px;border-radius:8px;font-weight:600;cursor:pointer;" onclick="startQuizWithMode(${level}, true)">🔥 Hard Mode (10/10)</button>
+            <button class="btn btn-primary btn-block" onclick="startQuizLevel_Internal(${level})">🎯 Start Quiz (8/10 to pass)</button>
           </div>
         </div>
       `;
     }
 
-    function startQuizWithMode(level, isHardMode) {
-      quizHardMode = isHardMode;
+    function startQuizLevel_Internal(level) {
       renderQuizQuestion(level, 0);
     }
 
@@ -10332,29 +11235,26 @@
 
       if (selectedIndex === q.correct) {
         quizCurrentScore++;
-      } else if (quizHardMode) {
-        /* Hard Mode: Single mistake = instant loss */
-        setTimeout(() => {
-          completeQuizLevel(level, 0, true);
-        }, 1500);
-        return;
       }
 
       document.getElementById('quizExplanation').style.display = 'block';
       document.getElementById('quizNextBtnContainer').style.display = '';
     }
 
-    function completeQuizLevel(level, score, isHardModeLoss = false) {
+    function completeQuizLevel(level, score) {
       const student = sdkLoad('students', currentStudentId);
       if (!student) return;
       if (!student.quizProgress) student.quizProgress = { completedLevels: [], xpTotal: 0, hpAwarded: 0 };
 
       const total = quizCurrentQuestions.length;
       const pct = Math.round((score / total) * 100);
+      const minScore = 8;
+      const scoreReached = score >= minScore;
       let xpEarned = 0;
       let isFirstTime = false;
 
-      if (!isHardModeLoss && !student.quizProgress.completedLevels.includes(level)) {
+      // Award XP and mark level as completed only if score >= 8/10
+      if (scoreReached && !student.quizProgress.completedLevels.includes(level)) {
         student.quizProgress.completedLevels.push(level);
         student.quizProgress.xpTotal = (student.quizProgress.xpTotal || 0) + 10;
         student.xp = (student.xp || 0) + 10;
@@ -10364,30 +11264,28 @@
       }
 
       sdkSave('students', student._id || student.id || currentStudentId, student);
-      if (!isHardModeLoss) {
+      if (scoreReached) {
         checkXPConversion(student);
         checkAchievements(student);
       }
 
       let message = '';
-      if (isHardModeLoss) {
-        message = '❌ One mistake in Hard Mode! Try again \u2013 you can do it!';
+      if (!scoreReached) {
+        message = 'Score below 8/10. Retake this level to progress.';
       } else if (pct === 100) {
-        message = quizHardMode ? '🔥 Perfect Hard Mode! Incredible!' : 'Perfect score! Outstanding!';
+        message = 'Perfect score! Outstanding!';
       } else if (pct >= 80) {
-        message = 'Excellent work! Keep it up!';
-      } else if (pct >= 60) {
-        message = 'Good effort! Review the topics you missed.';
-      } else {
-        message = 'Keep practising \u2014 you will improve!';
+        message = 'Excellent work! Level unlocked!';
+      } else if (pct >= 70) {
+        message = 'Well done! Level unlocked!';
       }
 
       const content = document.getElementById('quizPlayContent');
       content.innerHTML = `
         <div class="quiz-results">
-          <div style="font-size:3rem;margin-bottom:12px;">${isHardModeLoss ? '\u26A0\uFE0F' : (pct === 100 ? '\uD83C\uDFC6' : (pct >= 60 ? '\u2B50' : '\uD83D\uDCAA'))}</div>
+          <div style="font-size:3rem;margin-bottom:12px;">${!scoreReached ? '❌' : (pct === 100 ? '🏆' : '✅')}</div>
           <div class="score">${score} / ${total}</div>
-          <div class="xp-earned">${isHardModeLoss ? 'Hard Mode Active - Restart to try again' : (isFirstTime ? '+10 XP earned!' : 'Level already completed')}</div>
+          <div class="xp-earned">${scoreReached ? (isFirstTime ? '+10 XP earned!' : 'Level already completed') : 'Retry this level'}</div>
           <div class="message">${message}</div>
           <button class="btn btn-primary btn-block" onclick="backToQuizMap()" style="margin-top:16px;">Back to Map</button>
         </div>
