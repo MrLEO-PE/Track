@@ -8664,6 +8664,7 @@
 
       /* Ring style based on level - with glow progression */
       const ring = document.getElementById('avatarRingBorder');
+      if (!ring) return;
       ring.className = 'ring';
       ring.style.color = getHouseColor(student.house);
       ring.style.borderColor = getHouseColor(student.house);
