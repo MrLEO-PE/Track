@@ -3842,8 +3842,25 @@
       }));
     }
 
-    function sendActivationEmail(email, token) {
-      console.log(`[STUB] Activation email would be sent to ${email} with token ${token}`);
+    async function sendActivationEmail(email, token, firstName = '') {
+      try {
+        const res = await fetch('https://kvhguscgljstqsobnykm.supabase.co/functions/v1/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON}`
+          },
+          body: JSON.stringify({ email, token, firstName })
+        });
+        const data = await res.json();
+        if (data.success) {
+          console.log('[Email] Sent successfully to', email);
+        } else {
+          console.warn('[Email] Failed:', data.error);
+        }
+      } catch(e) {
+        console.warn('[Email] Error:', e.message);
+      }
     }
 
     function notifyTeacher(teacherNotification) {
