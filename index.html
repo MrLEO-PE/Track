@@ -5612,7 +5612,7 @@
       /* Link the authorized ID to this student account */
       linkAuthorizedId(authId, 'student', id);
       
-      sendActivationEmail(email, uuid());
+      sendActivationEmail(email, uuid(), finalFirstName);
       showToast('Account created successfully! ✓');
       saveSession(id, 'student');
 
@@ -5737,7 +5737,7 @@
       /* Link the authorized ID to this teacher account */
       linkAuthorizedId(authId, 'teacher', id);
       
-      sendActivationEmail(email, uuid());
+      sendActivationEmail(email, uuid(), firstName);
       
       if (isManager) {
         showToast('🎉 You are now the House Team Manager!');
