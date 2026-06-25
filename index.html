@@ -12960,6 +12960,7 @@ T001, teacher, Jane, Smith</code>
        INIT - CHECK SESSION ON LOAD
        ============================================= */
     document.addEventListener('DOMContentLoaded', async function() {
+      await sdkSyncFromSupabase();
       /* Seed data if collections are empty */
       if (sdkLoadAll('students').length === 0) {
         await seedData();
