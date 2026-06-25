@@ -8631,8 +8631,10 @@
       document.getElementById('profileName').textContent = fullName;
       document.getElementById('profileClass').textContent = student.classGrade + ' | ' + student.keyStage;
       const housePill = document.getElementById('profileHouse');
-      housePill.textContent = student.house;
-      housePill.className = 'house-pill ' + student.house;
+      if (housePill) {
+        housePill.textContent = student.house;
+        housePill.className = 'house-pill ' + student.house;
+      }
       document.getElementById('profileHP').textContent = hp;
       document.getElementById('profileRank').textContent = '#' + rank;
       
