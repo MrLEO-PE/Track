@@ -3633,121 +3633,37 @@
        STEP 2 - SDK FUNCTIONS
        ============================================= */
 
-    const SUPABASE_URL  = 'https://kvhguscgljstqsobnykm.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2aGd1c2NnbGpzdHFzb2JueWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzODEzMjUsImV4cCI6MjA5Nzk1NzMyNX0.wgiLV0QbKhCRWJZWvhuETGr11TLzMiWxJ06a8mt8wms';
-
-    const SUPABASE_COLLECTIONS = [
-      'students','teachers','assessments','classSportsActive',
-      'skillDefinitions','authorizedIds','housePointEvents',
-      'wellDoneLogs','teacherNotifications','quizProgress',
-      'seasonHistory','adminActionLogs','sports','globalSettings'
-    ];
-
-    async function sbRequest(method, collection, body = null, queryParams = '') {
-      const url = `${SUPABASE_URL}/rest/v1/${collection}${queryParams}`;
-      const headers = {
-        'apikey': SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`,
-        'Content-Type': 'application/json',
-        'Prefer': method === 'POST' ? 'resolution=merge-duplicates,return=representation' : 'return=representation'
-      };
-      try {
-        const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined });
-        if (!res.ok) { console.warn(`[SDK] Supabase ${method} ${collection} failed:`, await res.text()); return null; }
-        const text = await res.text();
-        return text ? JSON.parse(text) : null;
-      } catch (e) {
-        console.warn('[SDK] Network error — falling back to cache:', e.message);
-        return null;
-      }
-    }
-
     function sdkParseStore(collection) {
       try {
         return JSON.parse(localStorage.getItem(collection) || '{}');
       } catch (e) {
-        console.warn('[SDK] Corrupted cache in "' + collection + '", clearing.');
+        console.warn('[SDK] Corrupted data in "' + collection + '", clearing.');
         localStorage.removeItem(collection);
         return {};
       }
     }
 
-    function sdkWriteCache(collection, id, record) {
-      const store = sdkParseStore(collection);
-      store[id] = record;
-      localStorage.setItem(collection, JSON.stringify(store));
-    }
-
-    function sdkDeleteCache(collection, id) {
-      const store = sdkParseStore(collection);
-      delete store[id];
-      localStorage.setItem(collection, JSON.stringify(store));
-    }
-
     function sdkSave(collection, id, data) {
-      const record = { ...data, _id: id, _updatedAt: new Date().toISOString() };
-      sdkWriteCache(collection, id, record);
-      sbRequest('POST', collection, { id, data: record, updated_at: record._updatedAt }).then(r => {
-        if (!r) console.warn(`[SDK] sdkSave failed to sync "${collection}/${id}" — cached locally.`);
-      });
-      return record;
+      const store = sdkParseStore(collection);
+      store[id] = { ...data, _id: id, _updatedAt: new Date().toISOString() };
+      localStorage.setItem(collection, JSON.stringify(store));
+      return store[id];
     }
 
     function sdkLoad(collection, id) {
       const store = sdkParseStore(collection);
-      if (store[id]) return store[id];
-      sbRequest('GET', collection, null, `?id=eq.${encodeURIComponent(id)}&limit=1`).then(rows => {
-        if (rows && rows.length > 0) sdkWriteCache(collection, id, rows[0].data || rows[0]);
-      });
-      return null;
+      return store[id] || null;
     }
 
     function sdkLoadAll(collection) {
       const store = sdkParseStore(collection);
-      const cached = Object.values(store);
-      if (cached.length > 0) return cached;
-      sbRequest('GET', collection, null, '?limit=10000').then(rows => {
-        if (rows && rows.length > 0) {
-          const newStore = {};
-          rows.forEach(row => { const rec = row.data || row; const key = rec._id || row.id; if (key) newStore[key] = rec; });
-          localStorage.setItem(collection, JSON.stringify(newStore));
-        }
-      });
-      return cached;
+      return Object.values(store);
     }
 
     function sdkDelete(collection, id) {
-      sdkDeleteCache(collection, id);
-      sbRequest('DELETE', collection, null, `?id=eq.${encodeURIComponent(id)}`);
-    }
-
-    function sdkQuery(collection, filters) {
-      const all = sdkLoadAll(collection);
-      return all.filter(record => filters.every(f => {
-        const val = record[f.field];
-        if (f.operator === 'eq') return val === f.value;
-        if (f.operator === 'neq') return val !== f.value;
-        if (f.operator === 'contains') return String(val).toLowerCase().includes(String(f.value).toLowerCase());
-        if (f.operator === 'gte') return val >= f.value;
-        if (f.operator === 'lte') return val <= f.value;
-        return true;
-      }));
-    }
-
-    async function sdkSyncFromSupabase() {
-      console.log('[SDK] Starting full sync from Supabase...');
-      await Promise.all(SUPABASE_COLLECTIONS.map(async collection => {
-        try {
-          const rows = await sbRequest('GET', collection, null, '?limit=10000');
-          if (rows && rows.length > 0) {
-            const newStore = {};
-            rows.forEach(row => { const rec = row.data || row; const key = rec._id || row.id; if (key) newStore[key] = rec; });
-            localStorage.setItem(collection, JSON.stringify(newStore));
-            console.log(`[SDK] ✓ Synced "${collection}" (${rows.length} records)`);
-          }
-        } catch(e) { console.warn(`[SDK] Could not sync "${collection}":`, e.message); }
-      }));
-      console.log('[SDK] Full sync complete.');
+      const store = sdkParseStore(collection);
+      delete store[id];
+      localStorage.setItem(collection, JSON.stringify(store));
     }
 
     /* =============================================
@@ -3842,25 +3758,8 @@
       }));
     }
 
-    async function sendActivationEmail(email, token, firstName = '') {
-      try {
-        const res = await fetch('https://kvhguscgljstqsobnykm.supabase.co/functions/v1/send-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${SUPABASE_ANON}`
-          },
-          body: JSON.stringify({ email, token, firstName })
-        });
-        const data = await res.json();
-        if (data.success) {
-          console.log('[Email] Sent successfully to', email);
-        } else {
-          console.warn('[Email] Failed:', data.error);
-        }
-      } catch(e) {
-        console.warn('[Email] Error:', e.message);
-      }
+    function sendActivationEmail(email, token) {
+      console.log(`[STUB] Activation email would be sent to ${email} with token ${token}`);
     }
 
     function notifyTeacher(teacherNotification) {
@@ -5612,7 +5511,7 @@
       /* Link the authorized ID to this student account */
       linkAuthorizedId(authId, 'student', id);
       
-      sendActivationEmail(email, uuid(), finalFirstName);
+      sendActivationEmail(email, uuid());
       showToast('Account created successfully! ✓');
       saveSession(id, 'student');
 
@@ -5737,7 +5636,7 @@
       /* Link the authorized ID to this teacher account */
       linkAuthorizedId(authId, 'teacher', id);
       
-      sendActivationEmail(email, uuid(), firstName);
+      sendActivationEmail(email, uuid());
       
       if (isManager) {
         showToast('🎉 You are now the House Team Manager!');
@@ -8648,10 +8547,8 @@
       document.getElementById('profileName').textContent = fullName;
       document.getElementById('profileClass').textContent = student.classGrade + ' | ' + student.keyStage;
       const housePill = document.getElementById('profileHouse');
-      if (housePill) {
-        housePill.textContent = student.house;
-        housePill.className = 'house-pill ' + student.house;
-      }
+      housePill.textContent = student.house;
+      housePill.className = 'house-pill ' + student.house;
       document.getElementById('profileHP').textContent = hp;
       document.getElementById('profileRank').textContent = '#' + rank;
       
@@ -8681,7 +8578,6 @@
 
       /* Ring style based on level - with glow progression */
       const ring = document.getElementById('avatarRingBorder');
-      if (!ring) return;
       ring.className = 'ring';
       ring.style.color = getHouseColor(student.house);
       ring.style.borderColor = getHouseColor(student.house);
@@ -10927,222 +10823,18 @@
        STEP 12-13 - QUIZ MODULE
        ============================================= */
     const QUIZ_TOPICS = [
-      {
-        name: 'Body Mechanics', color: '#4A90D9',
-        intro: "Every movement your body makes is the result of muscles, bones, and joints working together.",
-        quote: "The human body is the best picture of the human soul.", quoteAuthor: "Ludwig Wittgenstein",
-        readingText: `<h3>Body Mechanics: How Your Body Moves</h3>
-<p>Every time you sprint, jump, throw, or change direction, your body performs a feat of extraordinary biological engineering. Movement is produced by three core systems: the <strong>skeletal system</strong> (bones), the <strong>muscular system</strong> (muscles), and the <strong>nervous system</strong> (brain and nerves).</p>
-<h4>Bones as Levers</h4>
-<p>Your skeleton is a system of levers. When a muscle contracts, it pulls on a bone via a tendon, rotating it around a joint. Most sport movements use <strong>third-class levers</strong>, favouring speed and range of motion — ideal for throwing and kicking.</p>
-<h4>Muscles</h4>
-<p>Muscles only pull, never push — they work in <strong>antagonistic pairs</strong>. Contractions are: <strong>concentric</strong> (shortens — lifting), <strong>eccentric</strong> (lengthens under tension — lowering slowly), and <strong>isometric</strong> (no length change — holding a plank).</p>
-<h4>Joints and Flexibility</h4>
-<p><strong>Ball-and-socket joints</strong> (hip, shoulder) allow multi-directional movement. <strong>Hinge joints</strong> (knee, elbow) move in one plane only. Flexibility can be trained and is sport-specific.</p>
-<h4>The Nervous System</h4>
-<p>Your brain sends signals down motor neurons to <strong>motor units</strong>. The more motor units recruited simultaneously, the greater the force produced. Elite athletes have superior neuromuscular coordination.</p>
-<h4>Energy Systems</h4>
-<p>The <strong>ATP-PC system</strong> powers explosive efforts up to 10 seconds. The <strong>lactic acid system</strong> covers 10 seconds to 2 minutes. The <strong>aerobic system</strong> fuels prolonged activity over 2 minutes.</p>
-<blockquote>"The human body is the best picture of the human soul." — Ludwig Wittgenstein</blockquote>`
-      },
-      {
-        name: 'Fuelling Performance', color: '#E8630A',
-        intro: "Your body runs on energy — and where that energy comes from makes all the difference.",
-        quote: "Take care of your body. It's the only place you have to live.", quoteAuthor: "Jim Rohn",
-        readingText: `<h3>Fuelling Performance: Nutrition for Athletes</h3>
-<p>Food is the raw material your body uses to build muscle, repair tissue, and power every contraction during sport.</p>
-<h4>The Three Macronutrients</h4>
-<p><strong>Carbohydrates</strong> are the body's preferred fuel — stored as glycogen. When glycogen runs out, performance drops sharply. <strong>Proteins</strong> build and repair muscle. <strong>Fats</strong> fuel low-intensity long-duration activity.</p>
-<h4>Hydration</h4>
-<p>Even a <strong>2% drop in body water</strong> causes measurable declines in endurance and concentration. Athletes can lose over 1 litre per hour through sweat. Drink proactively — thirst is a late indicator of dehydration.</p>
-<h4>Pre-Exercise Meal</h4>
-<p>2–3 hours before: rich in complex carbohydrates, moderate protein, low fat. 30–60 minutes before: a light snack like a banana tops up glycogen without digestive discomfort.</p>
-<h4>The Recovery Window</h4>
-<p>The 30–60 minutes after exercise — the <strong>anabolic window</strong> — is when muscles are maximally receptive to nutrients. Combine carbohydrates and protein for optimal recovery.</p>
-<h4>Key Micronutrients</h4>
-<p><strong>Iron</strong> carries oxygen in blood — low iron causes fatigue. <strong>Calcium and Vitamin D</strong> protect bone density. <strong>Vitamin C</strong> supports immune function and collagen for tendons.</p>
-<blockquote>"Take care of your body. It's the only place you have to live." — Jim Rohn</blockquote>`
-      },
-      {
-        name: 'Training Science', color: '#2E7D32',
-        intro: "Getting better at sport is not about trying harder randomly — it is about training smarter.",
-        quote: "The more I practise, the luckier I get.", quoteAuthor: "Gary Player",
-        readingText: `<h3>Training Science: The Principles Behind Improvement</h3>
-<p>Every elite athlete follows biological principles that govern how the body adapts to physical stress. These are not opinions — they are the laws of physiology.</p>
-<h4>Overload</h4>
-<p>The body only adapts when challenged beyond its current capacity. The FITT framework — <strong>Frequency, Intensity, Time, Type</strong> — applies overload systematically without injury.</p>
-<h4>Specificity</h4>
-<p>The body adapts specifically to the demands placed on it. Elite coaches design training that mimics the exact demands of competition as closely as possible.</p>
-<h4>Reversibility</h4>
-<p>Fitness gains are not permanent. Cardiovascular fitness begins declining within 2 weeks of inactivity. This is why athletes maintain some training even during off-seasons.</p>
-<h4>Periodisation</h4>
-<p>Training is divided into phases: <strong>preparation</strong> (high volume, low intensity), <strong>competition</strong> (sport-specific sharpening), and <strong>transition</strong> (active rest). Without it, athletes plateau or peak at the wrong time.</p>
-<h4>Recovery</h4>
-<p>Training is the stimulus; recovery is where improvement happens. Sleep, nutrition, and rest are not optional extras — they are essential components of the training process.</p>
-<blockquote>"The more I practise, the luckier I get." — Gary Player</blockquote>`
-      },
-      {
-        name: 'The Mind Game', color: '#6A1B9A',
-        intro: "The body follows the mind. Mental training can be the deciding factor between physically equal athletes.",
-        quote: "It's not the size of the dog in the fight, it's the size of the fight in the dog.", quoteAuthor: "Mark Twain",
-        readingText: `<h3>The Mind Game: Sports Psychology</h3>
-<p>Two athletes with identical physical abilities step onto the field. One performs brilliantly under pressure; the other freezes. What separates them is psychology.</p>
-<h4>Arousal and the Inverted-U</h4>
-<p>Performance follows an <strong>inverted-U curve</strong>: too little arousal (flat) and too much (panicked) both produce poor results. The optimal level varies — a weightlifter benefits from high arousal; an archer requires calm control.</p>
-<h4>Choking Under Pressure</h4>
-<p><strong>Choking</strong> occurs when anxiety causes athletes to consciously over-monitor automatic movements — paralysis by analysis. Pre-performance routines reduce this risk by focusing attention outward.</p>
-<h4>Visualisation</h4>
-<p><strong>Visualisation</strong> creates a vivid mental image of performing successfully. Neuroscience shows imagining a movement activates many of the same neural pathways as actually performing it.</p>
-<h4>Goal Setting</h4>
-<p>Use the <strong>SMART framework</strong>: Specific, Measurable, Achievable, Relevant, Time-bound. <strong>Intrinsic motivation</strong> — loving the sport — produces more sustained performance than extrinsic motivation.</p>
-<h4>The Flow State</h4>
-<p><strong>Flow</strong> is an optimal state where effort feels effortless and time disappears. It occurs at the intersection of high skill and high challenge.</p>
-<blockquote>"It's not the size of the dog in the fight, it's the size of the fight in the dog." — Mark Twain</blockquote>`
-      },
-      {
-        name: 'Fair Play & Ethics', color: '#F9A825',
-        intro: "Fair play is not just a rule — it is the foundation that makes sport meaningful.",
-        quote: "The most important thing in the Olympic Games is not to win but to take part.", quoteAuthor: "Pierre de Coubertin",
-        readingText: `<h3>Fair Play and Ethics in Sport</h3>
-<p>Sport at its best is a laboratory for character. The rules, the opponents, the pressure — these reveal and shape who we are.</p>
-<h4>What is Fair Play?</h4>
-<p>Fair play means more than following rules — it includes playing within the spirit of the game and refusing dishonest advantages. In Ultimate Frisbee, the entire game is self-officiated based on the <strong>Spirit of the Game</strong> philosophy.</p>
-<h4>Doping</h4>
-<p>The case against doping: it is <strong>cheating</strong> (deceiving opponents); it is <strong>dangerous</strong> (serious health risks); and it is <strong>coercive</strong> (clean athletes face pressure to dope to remain competitive). WADA oversees global drug testing.</p>
-<h4>Gamesmanship vs Sportsmanship</h4>
-<p><strong>Gamesmanship</strong> uses cunning methods within the rules — time-wasting, intimidation. <strong>Sportsmanship</strong> means playing in the true spirit of competition and accepting defeat graciously.</p>
-<h4>Inclusion</h4>
-<p>Sport has both reflected and challenged inequality. Jackie Robinson integrated baseball in 1947. Women were barred from the Olympic marathon until 1984. Sport's ethics demand active work toward inclusion.</p>
-<h4>Violence in Sport</h4>
-<p>Concussion research has raised ethical questions about brain injuries in rugby, American football, and boxing. Governing bodies, clubs, and educators share responsibility for maintaining safe boundaries.</p>
-<blockquote>"The most important thing in the Olympic Games is not to win but to take part." — Pierre de Coubertin</blockquote>`
-      },
-      {
-        name: 'Sport & Society', color: '#BF360C',
-        intro: "Sport reflects — and sometimes transforms — the societies that play it.",
-        quote: "Sport has the power to change the world.", quoteAuthor: "Nelson Mandela",
-        readingText: `<h3>Sport and Society: More Than a Game</h3>
-<p>Sport is never just sport. It is politics, economics, identity, culture, and power — all played out on a field or court.</p>
-<h4>Sport and National Identity</h4>
-<p>The 1995 Rugby World Cup — where Nelson Mandela wore a Springbok jersey — became one of the most powerful political moments in sporting history, demonstrating sport as a tool of national reconciliation. The 1936 Berlin Olympics were exploited by the Nazi regime, only to be undermined by Jesse Owens winning four gold medals.</p>
-<h4>Commercialisation</h4>
-<p>The global sports industry is worth over $500 billion annually. Television rights and sponsorship have transformed sport from recreation into a major economic sector — producing better facilities but also wage inequality.</p>
-<h4>Gender and Sport</h4>
-<p>Women were systematically excluded from organised sport for most of history. Today women's sport is the fastest-growing sector — but significant gaps in media coverage, sponsorship, and pay remain.</p>
-<h4>Race and Protest</h4>
-<p>At the 1968 Mexico City Olympics, Tommie Smith and John Carlos raised their fists in a Black Power salute — a moment that cost them their careers but entered history as one of sport's most powerful protests.</p>
-<h4>Globalisation</h4>
-<p>Football is played in every country on earth. Migration, television, and the internet have made sport a genuinely global language — while raising questions about the survival of traditional and indigenous games.</p>
-<blockquote>"Sport has the power to change the world. It has the power to inspire, it has the power to unite people." — Nelson Mandela</blockquote>`
-      },
-      {
-        name: 'Safety & Injury', color: '#E53935',
-        intro: "Understanding how injuries happen — and how to prevent them — is essential for every athlete.",
-        quote: "An ounce of prevention is worth a pound of cure.", quoteAuthor: "Benjamin Franklin",
-        readingText: `<h3>Safety and Injury: Protecting the Athlete</h3>
-<p>The vast majority of sports injuries are preventable — the result of identifiable risk factors including poor technique, inadequate warm-up, and overtraining.</p>
-<h4>Types of Injuries</h4>
-<p><strong>Acute injuries</strong> have sudden onset from trauma (broken bone, sprained ankle). <strong>Chronic overuse injuries</strong> develop gradually from repetitive stress (shin splints, stress fractures). <strong>Sprains</strong> are ligament injuries; <strong>strains</strong> are muscle or tendon injuries.</p>
-<h4>The PRICE Protocol</h4>
-<p><strong>Protection</strong> (stop activity), <strong>Rest</strong> (avoid loading), <strong>Ice</strong> (15–20 minutes every 2 hours for 48 hours), <strong>Compression</strong> (limit swelling), <strong>Elevation</strong> (raise limb above heart level).</p>
-<h4>Concussion</h4>
-<p>A concussion is a traumatic brain injury. Symptoms include headache, confusion, dizziness, and light sensitivity. Modern standard: <strong>if in doubt, sit out.</strong> Repeated concussions before full recovery can cause permanent brain damage (CTE).</p>
-<h4>Overuse Injuries</h4>
-<p>Almost always preventable through gradual training progression. The <strong>10% rule</strong>: never increase weekly training volume by more than 10% at a time.</p>
-<h4>Safe Sport</h4>
-<p>Physical safety also means protecting athletes from abuse and harassment. Every athlete has the right to participate free from physical, emotional, and sexual abuse.</p>
-<blockquote>"An ounce of prevention is worth a pound of cure." — Benjamin Franklin</blockquote>`
-      },
-      {
-        name: 'Olympic Movement', color: '#1A237E',
-        intro: "The Olympic Games are far more than medals and records — they are history, politics, and idealism combined.",
-        quote: "The most important thing in life is not the triumph but the struggle.", quoteAuthor: "Pierre de Coubertin",
-        readingText: `<h3>The Olympic Movement: History, Power, and Idealism</h3>
-<p>Every four years, the world stops to watch the Olympics — the largest peacetime gathering of nations on Earth. They are a political stage, a commercial enterprise, and an imperfect attempt to use sport for human unity.</p>
-<h4>Ancient Origins</h4>
-<p>The ancient Olympic Games were held at Olympia in Greece from 776 BCE until 393 CE — nearly 1,200 years. A sacred truce between all competing city-states was observed during the Games.</p>
-<h4>The Modern Revival</h4>
-<p><strong>Pierre de Coubertin</strong> founded the modern Olympic movement. The first modern Olympics were held in Athens in 1896 with 14 nations and 241 athletes — all male. His motto: Citius, Altius, Fortius (Faster, Higher, Stronger), later amended to add Communiter (Together) in 2021.</p>
-<h4>Politics on the Podium</h4>
-<p>The 1936 Berlin Games were used as Nazi propaganda. The 1972 Munich massacre killed 11 Israeli athletes and coaches. Cold War boycotts defined 1980 (USA-led, 65 nations absent) and 1984 (Soviet-led retaliation).</p>
-<h4>The Paralympic Movement</h4>
-<p>The Paralympics grew from rehabilitation sport for WWII veterans, initiated by Dr. Ludwig Guttmann in 1948. The first official Paralympics were held in Rome in 1960. Today they run alongside the Olympics at the same venues.</p>
-<h4>The Legacy Question</h4>
-<p>Host cities spend billions on infrastructure. Results are mixed: Athens 2004 left unused venues; Montreal 1976 left debt repaid over 30 years. But Barcelona 1992 genuinely transformed the city.</p>
-<blockquote>"The most important thing in life is not the triumph but the struggle." — Pierre de Coubertin</blockquote>`
-      },
-      {
-        name: 'Teamwork & Leadership', color: '#FF8F00',
-        intro: "No team wins on talent alone. Communication, trust, and leadership separate good teams from great ones.",
-        quote: "Alone we can do so little; together we can do so much.", quoteAuthor: "Helen Keller",
-        readingText: `<h3>Teamwork and Leadership in Sport</h3>
-<p>The most talented collection of individuals does not automatically make the best team. History is full of talented teams beaten by more cohesive, better-led groups.</p>
-<h4>Task vs Social Cohesion</h4>
-<p><strong>Task cohesion</strong> — shared commitment to goals — is more predictive of performance than social cohesion. Teams do not need to be friends to win, but they need a shared commitment to the same objective.</p>
-<h4>Communication</h4>
-<p>Elite teams communicate more frequently, more briefly, and more specifically than lower-performing teams. <strong>Psychological safety</strong> — the belief you can speak up without ridicule — is essential for honest communication.</p>
-<h4>Leadership Styles</h4>
-<p><strong>Authoritarian leaders</strong> make unilateral decisions — effective under pressure. <strong>Democratic leaders</strong> involve team members — builds buy-in. <strong>Transformational leadership</strong> — inspiring athletes to exceed their own expectations — is associated with the highest performance.</p>
-<h4>Clear Roles</h4>
-<p>Every member of a high-functioning team has a clear, accepted role. Role ambiguity significantly impairs performance. Teams with shared leadership often outperform teams dependent on a single leader.</p>
-<h4>Handling Failure</h4>
-<p>The most resilient teams use failure as a diagnostic tool — analysing what went wrong without blame, then adjusting. They maintain <strong>collective efficacy</strong>: a shared belief they can succeed together, even after setbacks.</p>
-<blockquote>"Alone we can do so little; together we can do so much." — Helen Keller</blockquote>`
-      },
-      {
-        name: 'Nutrition & Recovery', color: '#558B2F',
-        intro: "Recovery is an active process — sleep, nutrition, and rest determine how much you actually improve.",
-        quote: "Recovery is just as important as training. You must give your body time to repair.", quoteAuthor: "Attributed to multiple coaches",
-        readingText: `<h3>Nutrition and Recovery: The Other Half of Training</h3>
-<p>Training is a process of controlled damage — improvement only occurs during recovery. Sleep, nutrition, and rest are the mechanisms through which training produces results.</p>
-<h4>Sleep</h4>
-<p>During deep sleep, the pituitary gland releases <strong>growth hormone</strong>, driving muscle repair and growth. Elite athletes sleep 8–10 hours per night. Studies found extending sleep to 10 hours improved sprint times and shooting accuracy in basketball players.</p>
-<h4>Protein and Muscle Repair</h4>
-<p>Resistance exercise causes microscopic muscle damage. Optimal protein intake for athletes: approximately <strong>1.6–2.2g per kilogram of body weight per day</strong>. Leucine — found in dairy, eggs, and meat — is particularly effective at stimulating repair.</p>
-<h4>Carbohydrate Periodisation</h4>
-<p>Advanced athletes use <strong>carbohydrate periodisation</strong> — training with low glycogen in some sessions to improve fat oxidation. High-intensity sessions and competitions must always be fuelled with adequate carbohydrate.</p>
-<h4>Active Recovery</h4>
-<p>Light exercise on rest days promotes blood flow, clearing metabolic waste. Cold water immersion, compression garments, massage, and foam rolling are widely used recovery modalities.</p>
-<h4>Monitoring Recovery</h4>
-<p><strong>Heart rate variability (HRV)</strong> is a reliable marker of recovery. High HRV indicates good recovery; low HRV suggests the nervous system is still stressed. Subjective wellness ratings are equally valuable and require no technology.</p>
-<blockquote>"Recovery is just as important as training. You must give your body time to repair."</blockquote>`
-      },
-      {
-        name: 'Rules & Officiating', color: '#37474F',
-        intro: "Rules are not obstacles — they are what make sport fair, safe, and possible.",
-        quote: "Without rules, there is no game.", quoteAuthor: "Attributed to various coaches",
-        readingText: `<h3>Rules and Officiating: The Architecture of Sport</h3>
-<p>Rules define what sport is. Remove them and you have no game at all. Rules serve three purposes: fairness, safety, and skill definition.</p>
-<h4>How Rules Evolve</h4>
-<p>The basketball <strong>three-point line</strong> (1979) transformed strategy completely. The <strong>shot clock</strong> (1954) ended deliberate stalling. Football's <strong>back-pass rule</strong> (1992) prevented goalkeepers from time-wasting. Rules are a continuous negotiation between governing bodies and evolving play.</p>
-<h4>The Role of the Official</h4>
-<p>Officials require split-second decision-making, positional awareness, authority management, and deep knowledge of the rulebook. Research shows officials make more errors in the final minutes of close games — cognitive load and arousal impair judgment.</p>
-<h4>Technology in Officiating</h4>
-<p><strong>VAR</strong> reviews match-changing incidents in football. <strong>Hawk-Eye</strong> tracks ball trajectory in tennis and cricket. <strong>Goal-line technology</strong> determines whether balls crossed the line. Technology reduces error rates but introduces new controversies.</p>
-<h4>Tactical Rule Exploitation</h4>
-<p><strong>Tactical fouling</strong> — deliberately fouling to stop a counter-attack — is a calculated use of the rules. The <strong>hack-a-Shaq strategy</strong> in basketball exploits a structural rule vulnerability. Understanding where rules end and gamesmanship begins requires both knowledge and ethical judgment.</p>
-<h4>Rules and Safety</h4>
-<p>Many rules exist specifically to protect athletes. The offside rule in rugby prevents dangerous collisions. When rules fail to keep pace with evolving play, injury rates rise and governing bodies must respond.</p>
-<blockquote>"Without rules, there is no game."</blockquote>`
-      },
-      {
-        name: 'Biomechanics in Action', color: '#00838F',
-        intro: "Every kick, throw, jump, and landing follows the laws of physics — biomechanics helps athletes move smarter.",
-        quote: "If you can't explain it simply, you don't understand it well enough.", quoteAuthor: "Albert Einstein",
-        readingText: `<h3>Biomechanics in Action: The Physics of Sport</h3>
-<p>Every movement in sport is governed by the laws of physics. Biomechanics applies these laws to human movement, helping athletes and coaches understand why techniques work and how to optimise them.</p>
-<h4>Newton's Three Laws</h4>
-<p><strong>First Law (Inertia)</strong>: a body at rest stays at rest unless a force acts on it. <strong>Second Law (F=ma)</strong>: force equals mass times acceleration — power-to-weight ratio matters in most sports. <strong>Third Law (Action-Reaction)</strong>: when a sprinter pushes backward against the ground, the ground pushes them forward.</p>
-<h4>Projectile Motion</h4>
-<p>Any object launched through the air follows a <strong>parabolic trajectory</strong> determined by velocity, launch angle, and gravity. The <strong>Magnus effect</strong> explains why a well-struck football curves, a tennis topspin shot dips, and a golf slice curves right.</p>
-<h4>Rotational Motion</h4>
-<p><strong>Angular momentum</strong> is conserved in the absence of external forces. A spinning figure skater pulls their arms in to rotate faster — reducing radius decreases moment of inertia, so angular velocity increases to compensate.</p>
-<h4>Ground Reaction Forces</h4>
-<p>Every footstrike generates a <strong>ground reaction force</strong>. Efficient runners minimise braking forces by landing with their foot under their centre of mass. Carbon-fibre plate shoes return elastic energy from each footstrike, improving running economy.</p>
-<h4>Levers and Torque</h4>
-<p><strong>Torque</strong> determines how effectively muscles move joints. Longer lever arms amplify torque — tall athletes with long limbs generate high angular momentum in throwing. But longer levers also increase joint forces and injury risk.</p>
-<blockquote>"If you can't explain it simply, you don't understand it well enough." — Albert Einstein</blockquote>`
-      }
+      { name: 'Body Mechanics', color: '#4A90D9', intro: "Every movement your body makes is the result of muscles, bones, and joints working together as an interconnected system. Understanding how they cooperate helps you move more efficiently, generate more power, and reduce the risk of injury.", quote: "The human body is the best picture of the human soul.", quoteAuthor: "Ludwig Wittgenstein" },
+      { name: 'Fuelling Performance', color: '#E8630A', intro: "Your body runs on energy \u2014 and where that energy comes from makes all the difference to how you perform. From what you eat before a game to how quickly you recover after, fuel is the invisible engine behind every athletic achievement.", quote: "Take care of your body. It\u2019s the only place you have to live.", quoteAuthor: "Jim Rohn" },
+      { name: 'Training Science', color: '#2E7D32', intro: "Getting better at sport is not about trying harder randomly \u2014 it is about training smarter. The science of training reveals the specific principles that turn effort into genuine, measurable improvement over time.", quote: "The more I practise, the luckier I get.", quoteAuthor: "Gary Player" },
+      { name: 'The Mind Game', color: '#6A1B9A', intro: "The body follows the mind. Elite athletes and sport psychologists have shown that mental training \u2014 focus, resilience, confidence, and managing pressure \u2014 can be the deciding factor between athletes who are physically equal.", quote: "It\u2019s not the size of the dog in the fight, it\u2019s the size of the fight in the dog.", quoteAuthor: "Mark Twain" },
+      { name: 'Fair Play & Ethics', color: '#F9A825', intro: "Sport has the power to teach some of the most important life lessons \u2014 honesty, respect, resilience, and grace in defeat. But only if its values are upheld. Fair play is not just a rule; it is the foundation that makes sport meaningful.", quote: "The most important thing in the Olympic Games is not to win but to take part.", quoteAuthor: "Pierre de Coubertin" },
+      { name: 'Sport & Society', color: '#BF360C', intro: "Sport does not exist in a vacuum. It reflects \u2014 and sometimes transforms \u2014 the societies that play it. From politics on the Olympic podium to the global business of football, sport is one of the most powerful social forces in the modern world.", quote: "Sport has the power to change the world. It has the power to inspire, it has the power to unite people.", quoteAuthor: "Nelson Mandela" },
+      { name: 'Safety & Injury', color: '#E53935', intro: "Every time you step onto a sports field, you are responsible for your own safety and the safety of those around you. Understanding how injuries happen \u2014 and how to prevent them \u2014 is not optional knowledge. It is essential.", quote: "An ounce of prevention is worth a pound of cure.", quoteAuthor: "Benjamin Franklin" },
+      { name: 'Olympic Movement', color: '#1A237E', intro: "The Olympic Games are the world\u2019s greatest sporting stage \u2014 but their history is far more complex than medals and records. Understanding how the Games began, evolved, and shaped the world helps us appreciate what they truly stand for.", quote: "The most important thing in life is not the triumph but the struggle.", quoteAuthor: "Pierre de Coubertin" },
+      { name: 'Teamwork & Leadership', color: '#FF8F00', intro: "No team wins on talent alone. The ability to communicate, trust your teammates, lead under pressure, and recover together from setbacks separates good teams from great ones. These skills are built, not born.", quote: "Alone we can do so little; together we can do so much.", quoteAuthor: "Helen Keller" },
+      { name: 'Nutrition & Recovery', color: '#558B2F', intro: "What you do after exercise is just as important as the exercise itself. Recovery is not passive \u2014 it is an active process of fuelling, resting, hydrating, and sleeping that determines how much you actually improve from every session you put in.", quote: "Recovery is just as important as training. You must give your body time to repair.", quoteAuthor: "Attributed to multiple coaches" },
+      { name: 'Rules & Officiating', color: '#37474F', intro: "Rules are not obstacles \u2014 they are what make sport fair, safe, and possible. Understanding why rules exist, how they are enforced, and what happens when they break down gives you a much deeper appreciation of every sport you play or watch.", quote: "Without rules, there is no game.", quoteAuthor: "Attributed to various coaches" },
+      { name: 'Biomechanics in Action', color: '#00838F', intro: "Every kick, throw, jump, and landing follows the laws of physics \u2014 whether you know it or not. Biomechanics is the science of how forces act on the body during sport, and understanding it helps athletes and coaches make smarter decisions about technique.", quote: "If you can\u2019t explain it simply, you don\u2019t understand it well enough.", quoteAuthor: "Albert Einstein" }
     ];
 
     const QUIZ_QUESTIONS_DATA = {
@@ -11479,55 +11171,20 @@
       document.getElementById('quizPlayView').style.display = '';
 
       const content = document.getElementById('quizPlayContent');
-      const readingText = topic.readingText || `<p>${topic.intro}</p>`;
       content.innerHTML = `
         <div class="quiz-intro">
-          <div class="topic-badge" style="background:${topic.color};margin-bottom:8px;">${topic.name}</div>
-          <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:16px;">Level ${level} · Read the text below, then start the quiz</div>
-          <div id="quizReadingCard" style="background:var(--surface-2);border-left:4px solid ${topic.color};border-radius:10px;padding:20px;margin-bottom:20px;text-align:left;line-height:1.8;font-size:0.92rem;color:var(--text);max-height:55vh;overflow-y:auto;">
-            ${readingText}
+          <div class="topic-badge" style="background:${topic.color};">${topic.name}</div>
+          <h3>Level ${level}</h3>
+          <p class="intro-text">${topic.intro}</p>
+          <div class="intro-quote">
+            "${topic.quote}"<br><small>\u2014 ${topic.quoteAuthor}</small>
           </div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px;background:var(--surface-2);border-radius:8px;font-size:0.85rem;color:var(--text-2);">
-            <span id="quizReadTimer" style="font-size:1.1rem;font-weight:700;color:${topic.color};min-width:28px;">60</span>
-            <div style="flex:1;">
-              <div style="font-weight:600;color:var(--text);margin-bottom:2px;">Reading timer</div>
-              <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
-                <div id="quizReadTimerFill" style="height:100%;background:${topic.color};width:100%;transition:width 1s linear;"></div>
-              </div>
-            </div>
-            <span style="font-size:0.8rem;">Quiz unlocks after reading</span>
+          <div style="display:flex;gap:12px;margin-top:20px;flex-direction:column;">
+            <button class="btn btn-primary btn-block" onclick="startQuizLevel_Internal(${level})">🎯 Start Quiz (8/10 to pass)</button>
           </div>
-          <button class="btn btn-primary btn-block" id="quizStartBtn" onclick="startQuizLevel_Internal(${level})" disabled style="opacity:0.4;cursor:not-allowed;min-height:48px;font-size:1rem;">
-            🎯 Start Quiz (8/10 to pass)
-          </button>
-          <button class="btn btn-block" id="quizSkipReadBtn" onclick="unlockQuizStart(${level})" style="margin-top:8px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);min-height:40px;font-size:0.85rem;">
-            ⏩ I already know this topic — skip timer
-          </button>
         </div>
       `;
-      let timeLeft = 60;
-      window._quizReadInterval = setInterval(() => {
-        timeLeft--;
-        const timerEl = document.getElementById('quizReadTimer');
-        const fillEl  = document.getElementById('quizReadTimerFill');
-        if (timerEl) timerEl.textContent = timeLeft;
-        if (fillEl)  fillEl.style.width = (timeLeft / 60 * 100) + '%';
-        if (timeLeft <= 0) { clearInterval(window._quizReadInterval); unlockQuizStart(${level}); }
-      }, 1000);
     }
-
-    function unlockQuizStart(level) {
-      clearInterval(window._quizReadInterval);
-      const btn = document.getElementById('quizStartBtn');
-      const skipBtn = document.getElementById('quizSkipReadBtn');
-      const timerEl = document.getElementById('quizReadTimer');
-      const fillEl  = document.getElementById('quizReadTimerFill');
-      if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
-      if (skipBtn) skipBtn.style.display = 'none';
-      if (timerEl) timerEl.textContent = '✓';
-      if (fillEl)  fillEl.style.width = '100%';
-    }
-
 
     function startQuizLevel_Internal(level) {
       renderQuizQuestion(level, 0);
@@ -11562,14 +11219,6 @@
           <div id="quizNextBtnContainer" style="display:none;margin-top:12px;">
             <button class="btn btn-primary btn-block" onclick="renderQuizQuestion(${level}, ${questionIndex + 1})">Next \u2192</button>
           </div>
-          <details style="margin-top:16px;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
-            <summary style="padding:10px 14px;cursor:pointer;font-size:0.85rem;font-weight:600;color:var(--text-2);background:var(--surface-2);list-style:none;">
-              📖 Re-read the topic text
-            </summary>
-            <div style="padding:16px;font-size:0.88rem;line-height:1.8;color:var(--text);max-height:40vh;overflow-y:auto;border-top:1px solid var(--border);">
-              ${topic.readingText || topic.intro}
-            </div>
-          </details>
         </div>
       `;
     }
@@ -13227,7 +12876,6 @@ T001, teacher, Jane, Smith</code>
        INIT - CHECK SESSION ON LOAD
        ============================================= */
     document.addEventListener('DOMContentLoaded', async function() {
-      await sdkSyncFromSupabase();
       /* Seed data if collections are empty */
       if (sdkLoadAll('students').length === 0) {
         await seedData();
