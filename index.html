@@ -3633,37 +3633,121 @@
        STEP 2 - SDK FUNCTIONS
        ============================================= */
 
+    const SUPABASE_URL  = 'https://kvhguscgljstqsobnykm.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2aGd1c2NnbGpzdHFzb2JueWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzODEzMjUsImV4cCI6MjA5Nzk1NzMyNX0.wgiLV0QbKhCRWJZWvhuETGr11TLzMiWxJ06a8mt8wms';
+
+    const SUPABASE_COLLECTIONS = [
+      'students','teachers','assessments','classSportsActive',
+      'skillDefinitions','authorizedIds','housePointEvents',
+      'wellDoneLogs','teacherNotifications','quizProgress',
+      'seasonHistory','adminActionLogs','sports','globalSettings'
+    ];
+
+    async function sbRequest(method, collection, body = null, queryParams = '') {
+      const url = `${SUPABASE_URL}/rest/v1/${collection}${queryParams}`;
+      const headers = {
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Content-Type': 'application/json',
+        'Prefer': method === 'POST' ? 'resolution=merge-duplicates,return=representation' : 'return=representation'
+      };
+      try {
+        const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined });
+        if (!res.ok) { console.warn(`[SDK] Supabase ${method} ${collection} failed:`, await res.text()); return null; }
+        const text = await res.text();
+        return text ? JSON.parse(text) : null;
+      } catch (e) {
+        console.warn('[SDK] Network error — falling back to cache:', e.message);
+        return null;
+      }
+    }
+
     function sdkParseStore(collection) {
       try {
         return JSON.parse(localStorage.getItem(collection) || '{}');
       } catch (e) {
-        console.warn('[SDK] Corrupted data in "' + collection + '", clearing.');
+        console.warn('[SDK] Corrupted cache in "' + collection + '", clearing.');
         localStorage.removeItem(collection);
         return {};
       }
     }
 
-    function sdkSave(collection, id, data) {
+    function sdkWriteCache(collection, id, record) {
       const store = sdkParseStore(collection);
-      store[id] = { ...data, _id: id, _updatedAt: new Date().toISOString() };
+      store[id] = record;
       localStorage.setItem(collection, JSON.stringify(store));
-      return store[id];
+    }
+
+    function sdkDeleteCache(collection, id) {
+      const store = sdkParseStore(collection);
+      delete store[id];
+      localStorage.setItem(collection, JSON.stringify(store));
+    }
+
+    function sdkSave(collection, id, data) {
+      const record = { ...data, _id: id, _updatedAt: new Date().toISOString() };
+      sdkWriteCache(collection, id, record);
+      sbRequest('POST', collection, { id, data: record, updated_at: record._updatedAt }).then(r => {
+        if (!r) console.warn(`[SDK] sdkSave failed to sync "${collection}/${id}" — cached locally.`);
+      });
+      return record;
     }
 
     function sdkLoad(collection, id) {
       const store = sdkParseStore(collection);
-      return store[id] || null;
+      if (store[id]) return store[id];
+      sbRequest('GET', collection, null, `?id=eq.${encodeURIComponent(id)}&limit=1`).then(rows => {
+        if (rows && rows.length > 0) sdkWriteCache(collection, id, rows[0].data || rows[0]);
+      });
+      return null;
     }
 
     function sdkLoadAll(collection) {
       const store = sdkParseStore(collection);
-      return Object.values(store);
+      const cached = Object.values(store);
+      if (cached.length > 0) return cached;
+      sbRequest('GET', collection, null, '?limit=10000').then(rows => {
+        if (rows && rows.length > 0) {
+          const newStore = {};
+          rows.forEach(row => { const rec = row.data || row; const key = rec._id || row.id; if (key) newStore[key] = rec; });
+          localStorage.setItem(collection, JSON.stringify(newStore));
+        }
+      });
+      return cached;
     }
 
     function sdkDelete(collection, id) {
-      const store = sdkParseStore(collection);
-      delete store[id];
-      localStorage.setItem(collection, JSON.stringify(store));
+      sdkDeleteCache(collection, id);
+      sbRequest('DELETE', collection, null, `?id=eq.${encodeURIComponent(id)}`);
+    }
+
+    function sdkQuery(collection, filters) {
+      const all = sdkLoadAll(collection);
+      return all.filter(record => filters.every(f => {
+        const val = record[f.field];
+        if (f.operator === 'eq') return val === f.value;
+        if (f.operator === 'neq') return val !== f.value;
+        if (f.operator === 'contains') return String(val).toLowerCase().includes(String(f.value).toLowerCase());
+        if (f.operator === 'gte') return val >= f.value;
+        if (f.operator === 'lte') return val <= f.value;
+        return true;
+      }));
+    }
+
+    async function sdkSyncFromSupabase() {
+      console.log('[SDK] Starting full sync from Supabase...');
+      await Promise.all(SUPABASE_COLLECTIONS.map(async collection => {
+        try {
+          const rows = await sbRequest('GET', collection, null, '?limit=10000');
+          if (rows && rows.length > 0) {
+            const newStore = {};
+            rows.forEach(row => { const rec = row.data || row; const key = rec._id || row.id; if (key) newStore[key] = rec; });
+            localStorage.setItem(collection, JSON.stringify(newStore));
+            console.log(`[SDK] ✓ Synced "${collection}" (${rows.length} records)`);
+          }
+        } catch(e) { console.warn(`[SDK] Could not sync "${collection}":`, e.message); }
+      }));
+      console.log('[SDK] Full sync complete.');
     }
 
     /* =============================================
@@ -3758,8 +3842,25 @@
       }));
     }
 
-    function sendActivationEmail(email, token) {
-      console.log(`[STUB] Activation email would be sent to ${email} with token ${token}`);
+    async function sendActivationEmail(email, token, firstName = '') {
+      try {
+        const res = await fetch('https://kvhguscgljstqsobnykm.supabase.co/functions/v1/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON}`
+          },
+          body: JSON.stringify({ email, token, firstName })
+        });
+        const data = await res.json();
+        if (data.success) {
+          console.log('[Email] Sent successfully to', email);
+        } else {
+          console.warn('[Email] Failed:', data.error);
+        }
+      } catch(e) {
+        console.warn('[Email] Error:', e.message);
+      }
     }
 
     function notifyTeacher(teacherNotification) {
@@ -5511,7 +5612,7 @@
       /* Link the authorized ID to this student account */
       linkAuthorizedId(authId, 'student', id);
       
-      sendActivationEmail(email, uuid());
+      sendActivationEmail(email, uuid(), finalFirstName);
       showToast('Account created successfully! ✓');
       saveSession(id, 'student');
 
@@ -5636,7 +5737,7 @@
       /* Link the authorized ID to this teacher account */
       linkAuthorizedId(authId, 'teacher', id);
       
-      sendActivationEmail(email, uuid());
+      sendActivationEmail(email, uuid(), firstName);
       
       if (isManager) {
         showToast('🎉 You are now the House Team Manager!');
@@ -8547,8 +8648,10 @@
       document.getElementById('profileName').textContent = fullName;
       document.getElementById('profileClass').textContent = student.classGrade + ' | ' + student.keyStage;
       const housePill = document.getElementById('profileHouse');
-      housePill.textContent = student.house;
-      housePill.className = 'house-pill ' + student.house;
+      if (housePill) {
+        housePill.textContent = student.house;
+        housePill.className = 'house-pill ' + student.house;
+      }
       document.getElementById('profileHP').textContent = hp;
       document.getElementById('profileRank').textContent = '#' + rank;
       
@@ -8578,6 +8681,7 @@
 
       /* Ring style based on level - with glow progression */
       const ring = document.getElementById('avatarRingBorder');
+      if (!ring) return;
       ring.className = 'ring';
       ring.style.color = getHouseColor(student.house);
       ring.style.borderColor = getHouseColor(student.house);
@@ -12876,6 +12980,7 @@ T001, teacher, Jane, Smith</code>
        INIT - CHECK SESSION ON LOAD
        ============================================= */
     document.addEventListener('DOMContentLoaded', async function() {
+      await sdkSyncFromSupabase();
       /* Seed data if collections are empty */
       if (sdkLoadAll('students').length === 0) {
         await seedData();
